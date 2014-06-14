@@ -10,6 +10,8 @@ var player, board, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var keyboardMovement = true;
+var stepInProgress,
+    ignoreArrowKeys;
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -26,7 +28,14 @@ function create() {
     var layer = map.createLayer('Tile Layer 1');
     layer.resizeWorld();
 
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
     player = game.add.sprite(64, 64, 'robot');
+    player.data = {
+        movementQueue: []
+    };
+    game.physics.arcade.enable(player);
 
     player.anchor.setTo(0.5, 0.5);
 
@@ -46,18 +55,55 @@ function render() {
 }
 
 function tryArrowKeyMovement() {
-    if (cursors.up.isDown) {
-        moveOverTiles(player, 0, -1);
-    } else if (cursors.down.isDown) {
-        moveOverTiles(player, 0, 1);
-    } else if (cursors.left.isDown) {
-        moveOverTiles(player, -1, 0);
-    } else if (cursors.right.isDown) {
-        moveOverTiles(player, 1, 0);
+    if(!ignoreArrowKeys) {
+        var angle;
+        if (cursors.right.isDown) {
+            angle = 0;
+        } else if (cursors.left.isDown) {
+            angle = 180;
+        } else if (cursors.down.isDown) {
+            angle = 90;
+        } else if (cursors.up.isDown) {
+            angle = 270;
+        }
+        if(!_.isUndefined(angle)) {
+            player.data.movementQueue.push(_.partial(moveAtAngle, angle));
+        }
+        ignoreArrowKeys = true;
+        setTimeout(function(){
+            ignoreArrowKeys = false;
+        }, 50);
     }
+
+    if(!stepInProgress) {
+        var nextStep = player.data.movementQueue.shift();
+        if(nextStep) {
+            nextStep();
+        }
+    }
+
+    function moveAtAngle(angle) {
+        stepInProgress = true;
+
+        var distance = 128;
+        var speed = 60;
+        var time = distance / speed;
+
+        this.target = [player.x + distance, player.y];
+
+        game.physics.arcade.velocityFromAngle(angle || 0, speed, player.body.velocity);
+
+        setTimeout(function() {
+            player.body.velocity.x = 0;
+            player.body.velocity.y = 0;
+            stepInProgress = false;
+        }, time * 1000);
+    }
+
 }
 
 function moveOverTiles(entity, xTiles, yTiles) {
+
     if(!map) {
         console.error("No tilemap defined");
         return;
