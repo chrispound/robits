@@ -1,0 +1,21 @@
+{
+  "name": "lvls",
+  "version": "0.0.0",
+  "authors": [
+    "Tim Nunamaker <tim@timnunamaker.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "howler": "~1.1.20",
+    "phaser": "~2.0.4",
+    "underscore": "~1.6.0",
+    "jquery": "~2.1.1"
+  }
+}
