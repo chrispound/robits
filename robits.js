@@ -135,7 +135,7 @@ function moveAtAngle(player, angle) {
 
 function playerDisconnected() {
 
-    socket.emit("plyaer left", playerId)
+    socket.emit("player left", playerId)
 }
 
 function playerDisconnected(){
@@ -167,7 +167,7 @@ function setUpSocketReceivers() {
         //stop the game. display ./vbcn/message
     });
 
-playerJoined()
+    playerJoined();
 
     socket.on("update", function () {
         //probably list of all players and current positions.
