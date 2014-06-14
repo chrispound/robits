@@ -24,7 +24,7 @@ function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tileset', 'assets/tileset.png');
     game.load.image('robot', 'assets/robot.png');
-    game.load.image('portal', 'assets/portal.png');
+    //game.load.image('portal', 'assets/portal.png');
 }
 
 function create() {
