@@ -8,18 +8,23 @@ var w = window,
     height = w.innerHeight || e.clientHeight || g.clientHeight;
 
 var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
-var localPlayer, board, map;
+var localPlayer, layer, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
 var playerId = 0;
 //initiate connection to server
 var ignoreArrowKeys,
-    players = [],
+    players = {},
     roundReady;
 var socket = io();
 
 var colorScale = chroma.scale('RdYlBu');
+
+
+function getPlayers() {
+    return _.values(players);
+}
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -54,9 +59,11 @@ function create() {
 }
 
 function removePlayer(id) {
-    var player = _.find(players, function (player) {
-        return player.data.id = id;
+    var player = _.find(getPlayers(), function (player) {
+        return player.data.id === id;
     });
+
+    delete players[player.data.id];
 
     player.destroy();
 }
@@ -70,21 +77,23 @@ function addPlayer(data) {
         id: Math.random()
     }, data);
 
-    _.each(_.range(Math.round(Math.random() * 25) + 25), function () {
-        player.data.movementQueue.push(_.partial(moveAtAngle, player, 90 * Math.floor(Math.random() * 4)));
-    });
-
     player.body.collideWorldBounds = true;
     player.body.setSize(100, 100); //TODO set to 128x128 once we have perfect movement
 
     player.anchor.setTo(0.5, 0.5);
 
-    var color = colorScale(players.length / maxPlayers);
+    var color = colorScale(_.size(getPlayers()) / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
-    players.push(player);
+    players[player.data.id] = player;
 
     return player;
+}
+
+function addRandomPath(player) {
+    _.each(_.range(Math.round(Math.random() * 25) + 25), function () {
+        player.data.movementQueue.push(_.partial(moveAtAngle, player, 90 * Math.floor(Math.random() * 4)));
+    });
 }
 
 // These vars are temporary & just for debugging
@@ -102,7 +111,13 @@ function update() {
     } else {
         //planning stage
 
-        if (localPlayer && DEBUG_MODE) {
+        _.each(getPlayers(), function(player) {
+            addRandomPath(player);
+        });
+
+        roundReady = true;
+
+        /*if (localPlayer && DEBUG_MODE) {
             queueMovesWithArrowKeys(localPlayer);
 
             if(!timingOut) {
@@ -114,7 +129,7 @@ function update() {
                     }
                 }, 3000);
             }
-        }
+        }*/
     }
 }
 
@@ -125,17 +140,18 @@ function render() {
 }
 
 function tryRoundDone() {
-    var inProgress = _.some(players, function(player) {
+    var inProgress = _.some(getPlayers(), function(player) {
         return player.data.stepInProgress || player.data.movementQueue.length > 0;
     });
 
     if(!inProgress) {
         endRound();
+        console.log("***** End of round *****")
     }
 }
 
 function updateRound() {
-    _.each(players, function (player) {
+    _.each(getPlayers(), function (player) {
         game.physics.arcade.collide(player, layer);
         tryMovement(player);
     });
@@ -223,27 +239,45 @@ function clearSpriteMovement(sprite) {
     sprite.data.stepInProgress = false;
 }
 
-function playerConnected(playerId) {
-    addPlayer({id: playerId});
-}
-
 function playerWins(playerId) {
     alert("Game Over: " + playerId + " wins!");
+}
+
+function syncPlayerList(newPlayerList) {
+    _.each(getPlayers(), function removeIfMissing(player) {
+        var playerDisappeared = !_.some(newPlayerList, function(newPlayer) {
+            return newPlayer.playerId === player.data.id;
+        });
+
+        if(playerDisappeared) {
+            removePlayer(player.data.id);
+            console.log("Removing player " + player.data.id)
+        }
+    });
+
+    _.each(newPlayerList, function addIfMissing(newPlayer) {
+        var playerIsNew = !_.some(getPlayers(), function(player) {
+            return player.data.id === newPlayer.playerId;
+        });
+
+        if(playerIsNew) {
+            addPlayer({id: newPlayer.playerId});
+            console.log("Adding player " + newPlayer.playerId)
+        }
+    });
 }
 
 function setUpSocketReceivers() {
     socket.on('player won', playerWins);
 
-    socket.on('player joined', playerConnected);
-
-    socket.on('player left', removePlayer);
+    socket.on('players changed', syncPlayerList);
 
     socket.on("update", function () {
         //probably list of all players and current positions.
     });
 
     socket.on('receive id', function (playerId) {
-        console.log('I got my id it is: ' + playerId)
+        console.log('I got my id it is: ' + playerId);
 
         localPlayer = addPlayer({id: playerId});
 

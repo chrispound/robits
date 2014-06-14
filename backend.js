@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -5,35 +6,38 @@ var io = require('socket.io')(http);
 var players = [];
 var currentUser = 0;
 
-var player = function (playerId) {
+var Player = function (playerId) {
     return {
         playerId: playerId
     }
 };
 
-var addUser = function (sessionId) {
+var addUser = function (socket) {
+    var sessionId = socket.id;
     currentUser = currentUser + 1;
-    players.push(new player(sessionId));
+    players.push(new Player(sessionId));
+
     console.log("---WE HAVE THE FOLLOWING PLAYERS CONNECTED----");
+
     for (var i = 0; i < players.length; i++) {
         var existingPlayer = players[i];
         console.log('player: ' + existingPlayer.playerId)
 
     }
-    if (io.sockets.connected[sessionId]) {
+
+    setTimeout(function() {
         console.log('sending player: ' + sessionId + ' their id.');
-        io.sockets.connected[sessionId].emit('receive id', existingPlayer.playerId);
-    }
-    io.emit('player joined', existingPlayer.playerId);
-    console.log('player joined broadcast sent')
+        socket.emit('receive id', existingPlayer.playerId);
+        emitPlayersChanged();
+    }, 1500);
 };
 
 var dropUser = function (sessionId) {
     currentUser = currentUser - 1;
     var removePlayer = players.indexOf(playerById(sessionId));
     players.splice(removePlayer, 1);
-    io.emit('player left', sessionId);
-    console.log('player left broadcast sent')
+
+    emitPlayersChanged();
 };
 
 app.use(express.static(__dirname));
@@ -41,13 +45,18 @@ app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
     console.log('User: connected');
-    addUser(socket.id);
+    addUser(socket);
+
     socket.on('disconnect', function () {
         console.log('disconnect: ' + socket.id);
         dropUser(socket.id)
     });
 
 });
+
+function emitPlayersChanged() {
+    io.emit('players changed', players);
+}
 
 http.listen(3000, function () {
     console.log('listening on *:3000');
