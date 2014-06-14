@@ -133,41 +133,35 @@ function moveAtAngle(player, angle) {
     }, time * 1000);
 }
 
-function playerDisconnected() {
-
-    socket.emit("player left", playerId)
+function disconnect() {
+    socket.emit("player left", playerId);
 }
 
-function playerDisconnected(){
-
-    socket.emit("player left", playerId )
+function broadcastMove() {
+    socket.emit("player moved", 0);
 }
 
-
-function playerMoved() {
-    socket.emit("player moved", 0)
+function localPlayerDies() {
+    socket.emit("player died", playerId);
 }
 
-function playerDied() {
-    socket.emit("player died", playerId)
+function localPlayerReachesCheckpoint() {
+    socket.emit("checkpoint reached", playerId);
 }
 
-function playerReachedCheckpoint() {
-    socket.emit("checkpoint reached", playerId)
+function playerConnected(playerId) {
+    addPlayer({id: playerId});
 }
 
-function playerJoined() {
-    socket.on('player joined', function (playerId) {
-        addPlayer({id: playerId});
-    });
+function playerWins(playerId) {
+    //stop the game. display ./vbcn/message
+    alert("Game Over: " + playerId + " wins!");
 }
 
 function setUpSocketReceivers() {
-    socket.on('player won', function (playerId) {
-        //stop the game. display ./vbcn/message
-    });
+    socket.on('player won', playerWins);
 
-    playerJoined();
+    socket.on('player joined', playerConnected);
 
     socket.on("update", function () {
         //probably list of all players and current positions.
