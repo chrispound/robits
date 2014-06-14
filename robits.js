@@ -11,7 +11,7 @@ var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var keyboardMovement = true;
 var maxPlayers = 8;
-var playerId= 0;
+var playerId = 0;
 //initiate connection to server
 var ignoreArrowKeys,
     players = [];
@@ -56,7 +56,7 @@ function addPlayer(data) {
         id: Math.random()
     }, data);
 
-    _.each(_.range(Math.round(Math.random() * 25) + 25), function() {
+    _.each(_.range(Math.round(Math.random() * 25) + 25), function () {
         player.data.movementQueue.push(_.partial(moveAtAngle, player, 90 * Math.floor(Math.random() * 4)));
     });
 
@@ -64,7 +64,7 @@ function addPlayer(data) {
     player.anchor.setTo(0.5, 0.5);
 
     var color = colorScale(players.length / maxPlayers);
-    player.tint = parseInt(color.hex().replace("#",""), 16);
+    player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     players.push(player);
 
@@ -72,7 +72,7 @@ function addPlayer(data) {
 }
 
 function update() {
-    _.each(players, function(player) {
+    _.each(players, function (player) {
         planMovement(player);
         kickoffMovement(player);
     });
@@ -83,7 +83,7 @@ function render() {
 }
 
 function planMovement(player) {
-    if(!ignoreArrowKeys) {
+    if (!ignoreArrowKeys) {
         var angle;
         if (cursors.right.isDown) {
             angle = 0;
@@ -94,20 +94,20 @@ function planMovement(player) {
         } else if (cursors.up.isDown) {
             angle = 270;
         }
-        if(!_.isUndefined(angle)) {
+        if (!_.isUndefined(angle)) {
             player.data.movementQueue.push(_.partial(moveAtAngle, player, angle));
         }
         ignoreArrowKeys = true;
-        setTimeout(function(){
+        setTimeout(function () {
             ignoreArrowKeys = false;
         }, 50);
     }
 }
 
 function kickoffMovement(player) {
-    if(!player.data.stepInProgress) {
+    if (!player.data.stepInProgress) {
         var nextStep = player.data.movementQueue.shift();
-        if(nextStep) {
+        if (nextStep) {
             nextStep();
         }
     }
@@ -124,16 +124,16 @@ function moveAtAngle(player, angle) {
 
     game.physics.arcade.velocityFromAngle(angle || 0, speed, player.body.velocity);
 
-    setTimeout(function() {
+    setTimeout(function () {
         player.body.velocity.x = 0;
         player.body.velocity.y = 0;
         player.data.stepInProgress = false;
     }, time * 1000);
 }
 
-function playerDisconnected(){
+function playerDisconnected() {
 
-    socket.emit("plyaer left", playerId )
+    socket.emit("plyaer left", playerId)
 }
 
 
@@ -145,24 +145,24 @@ function playerDied() {
     socket.emit("player died", playerId)
 }
 
-function playerReachedCheckpoint(){
+function playerReachedCheckpoint() {
     socket.emit("checkpoint reached", playerId)
 }
 
 function playerJoined() {
-    socket.on('player joined', function(playerId){
+    socket.on('player joined', function (playerId) {
         addPlayer({id: playerId});
     });
 }
 
 function setUpSocketReceivers() {
-    socket.on('player won', function(playerId){
-         //stop the game. display ./vbcn/message
+    socket.on('player won', function (playerId) {
+        //stop the game. display ./vbcn/message
     });
 
 
-    socket.on("update", function(){
-    //probably list of all players and current positions.
+    socket.on("update", function () {
+        //probably list of all players and current positions.
 
     });
 }
