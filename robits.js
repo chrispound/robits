@@ -56,12 +56,6 @@ function update() {
 
 function render() {
 
-    socket.on("player joined", function(playerId){
-//draw other player
-    console.log('player joined recieved');
-    game.add.sprite(64, 84, 'robot');
-    
-});
 }
 
 function tryArrowKeyMovement() {
@@ -130,21 +124,12 @@ function moveOverTiles(entity, xTiles, yTiles) {
     entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), tileWidth / 2, map.heightInPixels - (tileWidth / 2));
 }
 
-socket.on("player joined", function(playerId){
-//draw other player
-    console.log('player joined recieved');
-    game.add.sprite(64, 84, 'robot');
-    
-});
 
 function playerDisconnected(){
 
     socket.emit("plyaer left", playerId )
 }
 
-//function playerJoined() {
-//      socket.emit("player joined", playerId)
-//}
 
 function playerMoved() {
     socket.emit("player moved", 0)
@@ -165,12 +150,6 @@ socket.on('player won', function(playerId){
      //stop the game. display ./vbcn/message
 });
 
-socket.on('player joined', function(playerId){
-//draw other player
-    console.log('player joined recieved');
-    game.add.sprite(64, 84, 'robot');
-    
-});
 
 socket.on("update", function(){
 //probably list of all players and current positions.
