@@ -33,12 +33,12 @@ app.use(express.static(__dirname));
 
     io.on('connection', function(socket){
       console.log('User: connected');
-                
+    addUser()
     socket.on('disconnect', function(){
         console.log('User: ' + currentUser + ' disconnected');
            dropUser()
       });
-        socket.on('player joined', addUser());
+    
           });
 
 http.listen(3000, function(){
