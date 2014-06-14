@@ -15,7 +15,8 @@ var maxPlayers = 8;
 var playerId = 0;
 //initiate connection to server
 var ignoreArrowKeys,
-    players = [];
+    players = [],
+    roundReady;
 var socket = io();
 
 var colorScale = chroma.scale('RdYlBu');
@@ -31,7 +32,7 @@ function create() {
     setUpSocketReceivers();
     cursors = game.input.keyboard.createCursorKeys();
 
-    game.stage.backgroundColor  = '#787878';
+    game.stage.backgroundColor = '#787878';
 
     map = game.add.tilemap('map');
     map.addTilesetImage('tileset');
@@ -57,7 +58,7 @@ function create() {
 }
 
 function removePlayer(id) {
-    var player = _.find(players, function(player) {
+    var player = _.find(players, function (player) {
         return player.data.id = id;
     });
 
@@ -78,9 +79,9 @@ function addPlayer(data) {
     });
 
     player.body.collideWorldBounds = true;
-  player.body.setSize(128, 128); //TODO set to 128x128 once we have perfect movement
+    player.body.setSize(100, 100); //TODO set to 128x128 once we have perfect movement
 
-  player.anchor.setTo(0.5, 0.5);
+    player.anchor.setTo(0.5, 0.5);
 
     var color = colorScale(players.length / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);
@@ -90,23 +91,63 @@ function addPlayer(data) {
     return player;
 }
 
+// These vars are temporary & just for debugging
+var firstTime = true;
+var timingOut = false;
 function update() {
-    _.each(players, function (player) {
-      game.physics.arcade.collide(player, layer);
-      planMovement(player);
-        kickoffMovement(player);
-    });
+    if(firstTime) {
+        firstTime = false;
+        roundReady = true
+    }
+
+    if(roundReady) {
+        updateRound();
+        tryRoundDone();
+    } else {
+        //planning stage
+
+        if (DEBUG_MODE) {
+            queueMovesWithArrowKeys(localPlayer);
+
+            if(!timingOut) {
+                timingOut = true;
+                setTimeout(function() {
+                    timingOut = false;
+                    if(localPlayer.data.movementQueue.length > 0) {
+                        roundReady = true;
+                    }
+                }, 3000);
+            }
+        }
+    }
 }
 
 function render() {
-  game.debug.body(localPlayer);
+    game.debug.body(localPlayer);
 }
 
-function planMovement(player) {
-    if(!DEBUG_MODE) {
-        return;
-    }
+function tryRoundDone() {
+    var inProgress = _.some(players, function(player) {
+        return player.data.stepInProgress || player.data.movementQueue.length > 0;
+    });
 
+    if(!inProgress) {
+        endRound();
+    }
+}
+
+function updateRound() {
+    _.each(players, function (player) {
+        game.physics.arcade.collide(player, layer);
+        tryMovement(player);
+    });
+}
+
+function endRound() {
+    roundReady = false;
+}
+
+function queueMovesWithArrowKeys(player) {
     if (!ignoreArrowKeys) {
         var angle;
         if (cursors.right.isDown) {
@@ -128,7 +169,7 @@ function planMovement(player) {
     }
 }
 
-function kickoffMovement(player) {
+function tryMovement(player) {
     if (!player.data.stepInProgress) {
         var nextStep = player.data.movementQueue.shift();
         if (nextStep) {
@@ -164,24 +205,24 @@ function playerDied() {
 }
 
 function goThroughPortal(sprite, tile) {
-  console.log("going through portal!");
-  //teleport to other portal
-  return false;
+    console.log("going through portal!");
+    //teleport to other portal
+    return false;
 }
 
 function fallInHole(sprite, tile) {
-  console.log("fell in hole!");
-  // player reset
-  sprite.body.x = 0;
-  sprite.body.y = 0;
-  clearSpriteMovement(sprite);
-  return false;
+    console.log("fell in hole!");
+    // player reset
+    sprite.body.x = 0;
+    sprite.body.y = 0;
+    clearSpriteMovement(sprite);
+    return false;
 }
 
 function clearSpriteMovement(sprite) {
-  sprite.body.velocity.x = 0;
-  sprite.body.velocity.y = 0;
-  sprite.data.stepInProgress = false;
+    sprite.body.velocity.x = 0;
+    sprite.body.velocity.y = 0;
+    sprite.data.stepInProgress = false;
 }
 
 function playerConnected(playerId) {
@@ -189,7 +230,6 @@ function playerConnected(playerId) {
 }
 
 function playerWins(playerId) {
-    //stop the game. display ./vbcn/message
     alert("Game Over: " + playerId + " wins!");
 }
 
@@ -204,7 +244,7 @@ function setUpSocketReceivers() {
         //probably list of all players and current positions.
     });
 
-    socket.on('receive id', function(playerId){
+    socket.on('receive id', function (playerId) {
         console.log('I got my id it is: ' + playerId)
     });
 
