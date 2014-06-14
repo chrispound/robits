@@ -70,6 +70,6 @@ function moveOverTiles(entity, xTiles, yTiles) {
         keyboardMovement = true;
     }, 100);
 
-    entity.x = Phaser.Math.clamp(entity.x + (xTiles * tileWidth), 0, width);
-    entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), 0, height);
+    entity.x = Phaser.Math.clamp(entity.x + (xTiles * tileWidth), tileWidth / 2, map.widthInPixels - (tileWidth / 2));
+    entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), tileWidth / 2, map.heightInPixels - (tileWidth / 2));
 }
