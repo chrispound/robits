@@ -21,7 +21,7 @@ for(i = 0; i < players.length; i++){
     
 }
 
-    io.emit('player joined', currentUser);
+    io.emit('player joined', existingPlayer.playerId);
     console.log('player joined broadcast sent')
 }
 var dropUser = function() {
