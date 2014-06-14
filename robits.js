@@ -10,6 +10,7 @@ var player, board, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var keyboardMovement = true;
+var socket = io();
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -18,7 +19,6 @@ function preload() {
 }
 
 function create() {
-    var socket = io();
     cursors = game.input.keyboard.createCursorKeys();
 
     map = game.add.tilemap('map');
@@ -64,6 +64,7 @@ function moveOverTiles(entity, xTiles, yTiles) {
         return;
     } else if(!keyboardMovement) {
         return;
+
     }
 
     keyboardMovement = false;
