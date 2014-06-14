@@ -166,6 +166,10 @@ function setUpSocketReceivers() {
     socket.on("update", function () {
         //probably list of all players and current positions.
 
+    socket.on('receive id', function(playerId){
+        console.log('I got my id it is: ' + playerId)
+    });
+
     });
 }
 

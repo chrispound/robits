@@ -11,16 +11,19 @@ var player = function(value) {
      playerId: playerId
    }
 }
-var addUser = function() {
+var addUser = function(sessionId) {
 currentUser = currentUser + 1
-players.push( new player(currentUser))
+players.push( new player(sessionId))
 console.log("---WE HAVE THE FOLLOWING PLAYERS CONNECTED----")
 for(i = 0; i < players.length; i++){
      var existingPlayer = players[i]
     console.log('player: ' + existingPlayer.playerId)
     
 }
-
+if(io.sockets.connected[sessionId]) {
+    console.log('sending player: ' + sessionId + ' their id.' )
+    io.sockets.connected[sessionId].emit('receive id', existingPlayer.playerId)
+    }
     io.emit('player joined', existingPlayer.playerId);
     console.log('player joined broadcast sent')
 }
@@ -34,7 +37,7 @@ app.use(express.static(__dirname));
 
     io.on('connection', function(socket){
       console.log('User: connected');
-    addUser()
+    addUser(socket.id)
     socket.on('disconnect', function(){
         console.log('User: ' + currentUser + ' disconnected');
            dropUser()
