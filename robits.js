@@ -12,6 +12,8 @@ var widthInTiles, heightInTiles, tileWidth;
 var keyboardMovement = true;
 var stepInProgress,
     ignoreArrowKeys;
+var playerId= 0;
+//initiate connection to server
 var socket = io();
 
 function preload() {
@@ -53,6 +55,12 @@ function update() {
 
 function render() {
 
+    socket.on("player joined", function(playerId){
+//draw other player
+    console.log('player joined recieved');
+    game.add.sprite(64, 84, 'robot');
+    
+});
 }
 
 function tryArrowKeyMovement() {
@@ -104,7 +112,6 @@ function tryArrowKeyMovement() {
 }
 
 function moveOverTiles(entity, xTiles, yTiles) {
-
     if(!map) {
         console.error("No tilemap defined");
         return;
@@ -121,3 +128,54 @@ function moveOverTiles(entity, xTiles, yTiles) {
     entity.x = Phaser.Math.clamp(entity.x + (xTiles * tileWidth), tileWidth / 2, map.widthInPixels - (tileWidth / 2));
     entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), tileWidth / 2, map.heightInPixels - (tileWidth / 2));
 }
+
+socket.on("player joined", function(playerId){
+//draw other player
+    console.log('player joined recieved');
+    game.add.sprite(64, 84, 'robot');
+    
+});
+
+function playerDisconnected(){
+
+    socket.emit("plyaer left", playerId )
+}
+
+//function playerJoined() {
+//      socket.emit("player joined", playerId)
+//}
+
+function playerMoved() {
+    socket.emit("player moved", 0)
+}
+
+function playerDied() {
+    socket.emit("player died", playerId)
+}
+
+function playerReachedCheckpoint(){
+    socket.emit("checkpoint reached", playerId)
+}
+
+function setUpSocketReceivers() {
+
+
+socket.on('player won', function(playerId){
+     //stop the game. display ./vbcn/message
+});
+
+socket.on('player joined', function(playerId){
+//draw other player
+    console.log('player joined recieved');
+    game.add.sprite(64, 84, 'robot');
+    
+});
+
+socket.on("update", function(){
+//probably list of all players and current positions.
+
+});
+}
+
+
+
