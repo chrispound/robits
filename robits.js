@@ -1,3 +1,5 @@
+var DEBUG_MODE = true;
+
 var w = window,
     d = document,
     e = d.documentElement,
@@ -9,7 +11,6 @@ var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: prel
 var localPlayer, board, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
-var keyboardMovement = true;
 var maxPlayers = 8;
 var playerId = 0;
 //initiate connection to server
@@ -95,6 +96,10 @@ function render() {
 }
 
 function planMovement(player) {
+    if(!DEBUG_MODE) {
+        return;
+    }
+
     if (!ignoreArrowKeys) {
         var angle;
         if (cursors.right.isDown) {
@@ -194,12 +199,12 @@ function setUpSocketReceivers() {
 
     socket.on("update", function () {
         //probably list of all players and current positions.
+    });
 
     socket.on('receive id', function(playerId){
         console.log('I got my id it is: ' + playerId)
     });
 
-    });
 }
 
 
