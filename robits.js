@@ -10,19 +10,14 @@ var localPlayer, board, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var keyboardMovement = true;
+var maxPlayers = 8;
 var playerId= 0;
 //initiate connection to server
 var ignoreArrowKeys,
-    players = [],
-    numPlayers = 3;
+    players = [];
 var socket = io();
 
-var colors = [
-    0xff00ff,
-    0xff0000,
-    0x00ff00,
-    0x0000ff
-];
+var colorScale = chroma.scale('RdYlBu');
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -43,32 +38,37 @@ function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    _.each(_.range(numPlayers), function(index) {
-        var player = game.add.sprite(64 + 64 * Math.round(Math.random() * 3), 64 + 64 * Math.round(Math.random() * 3), 'robot');
-        game.physics.arcade.enable(player);
-
-        player.data = {
-            movementQueue: []
-        };
-
-        _.each(_.range(Math.round(Math.random() * 25) + 25), function() {
-            player.data.movementQueue.push(_.partial(moveAtAngle, player, 90 * Math.floor(Math.random() * 4)));
-        });
-
-        player.body.collideWorldBounds = true;
-        player.anchor.setTo(0.5, 0.5);
-        player.tint = colors[index];
-
-        players.push(player);
-    });
-
-    localPlayer = players[0];
+    localPlayer = addPlayer();
 
     game.camera.follow(localPlayer);
 
     widthInTiles = 16;
     heightInTiles = 12;
     tileWidth = 128;
+}
+
+function addPlayer(data) {
+    var player = game.add.sprite(64 + 64 * Math.round(Math.random() * 3), 64 + 64 * Math.round(Math.random() * 3), 'robot');
+    game.physics.arcade.enable(player);
+
+    player.data = _.extend({
+        movementQueue: [],
+        id: Math.random()
+    }, data);
+
+    _.each(_.range(Math.round(Math.random() * 25) + 25), function() {
+        player.data.movementQueue.push(_.partial(moveAtAngle, player, 90 * Math.floor(Math.random() * 4)));
+    });
+
+    player.body.collideWorldBounds = true;
+    player.anchor.setTo(0.5, 0.5);
+
+    var color = colorScale(players.length / maxPlayers);
+    player.tint = parseInt(color.hex().replace("#",""), 16);
+
+    players.push(player);
+
+    return player;
 }
 
 function update() {
@@ -131,25 +131,6 @@ function moveAtAngle(player, angle) {
     }, time * 1000);
 }
 
-function moveOverTiles(entity, xTiles, yTiles) {
-    if(!map) {
-        console.error("No tilemap defined");
-        return;
-    } else if(!keyboardMovement) {
-        return;
-
-    }
-
-    keyboardMovement = false;
-    setTimeout(function() {
-        keyboardMovement = true;
-    }, 100);
-
-    entity.x = Phaser.Math.clamp(entity.x + (xTiles * tileWidth), tileWidth / 2, map.widthInPixels - (tileWidth / 2));
-    entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), tileWidth / 2, map.heightInPixels - (tileWidth / 2));
-}
-
-
 function playerDisconnected(){
 
     socket.emit("plyaer left", playerId )
@@ -169,23 +150,21 @@ function playerReachedCheckpoint(){
 }
 
 function playerJoined() {
-socket.on('player joined', function(playerId){
-       console.log('player joined: ' + playerId);
-});
+    socket.on('player joined', function(playerId){
+        addPlayer({id: playerId});
+    });
 }
 
 function setUpSocketReceivers() {
+    socket.on('player won', function(playerId){
+         //stop the game. display ./vbcn/message
+    });
 
 
-socket.on('player won', function(playerId){
-     //stop the game. display ./vbcn/message
-});
+    socket.on("update", function(){
+    //probably list of all players and current positions.
 
-
-socket.on("update", function(){
-//probably list of all players and current positions.
-
-});
+    });
 }
 
 

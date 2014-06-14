@@ -16,6 +16,7 @@
     "howler": "~1.1.20",
     "phaser": "~2.0.4",
     "underscore": "~1.6.0",
-    "jquery": "~2.1.1"
+    "jquery": "~2.1.1",
+    "chroma-js": "~0.5.6"
   }
 }
