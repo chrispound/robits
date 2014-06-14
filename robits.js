@@ -56,6 +56,14 @@ function create() {
     tileWidth = 128;
 }
 
+function removePlayer(id) {
+    var player = _.find(players, function(player) {
+        return player.data.id = id;
+    });
+
+    player.destroy();
+}
+
 function addPlayer(data) {
     var player = game.add.sprite(64 + 64 * Math.round(Math.random() * 3), 64 + 64 * Math.round(Math.random() * 3), 'robot');
     game.physics.arcade.enable(player);
@@ -147,11 +155,6 @@ function disconnect() {
     socket.emit("player left", playerId);
 }
 
-function playerDisconnected(){
-
-    socket.emit("player left", playerId )
-}
-
 function playerMoved() {
     socket.emit("player moved", 0)
 }
@@ -185,7 +188,6 @@ function playerConnected(playerId) {
     addPlayer({id: playerId});
 }
 
-
 function playerWins(playerId) {
     //stop the game. display ./vbcn/message
     alert("Game Over: " + playerId + " wins!");
@@ -195,6 +197,8 @@ function setUpSocketReceivers() {
     socket.on('player won', playerWins);
 
     socket.on('player joined', playerConnected);
+
+    socket.on('player left', removePlayer);
 
     socket.on("update", function () {
         //probably list of all players and current positions.
