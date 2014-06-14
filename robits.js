@@ -48,10 +48,6 @@ function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    localPlayer = addPlayer();
-
-    game.camera.follow(localPlayer);
-
     widthInTiles = 16;
     heightInTiles = 12;
     tileWidth = 128;
@@ -106,7 +102,7 @@ function update() {
     } else {
         //planning stage
 
-        if (DEBUG_MODE) {
+        if (localPlayer && DEBUG_MODE) {
             queueMovesWithArrowKeys(localPlayer);
 
             if(!timingOut) {
@@ -123,7 +119,9 @@ function update() {
 }
 
 function render() {
-    game.debug.body(localPlayer);
+    if(localPlayer) {
+        game.debug.body(localPlayer);
+    }
 }
 
 function tryRoundDone() {
@@ -246,9 +244,10 @@ function setUpSocketReceivers() {
 
     socket.on('receive id', function (playerId) {
         console.log('I got my id it is: ' + playerId)
+
+        localPlayer = addPlayer({id: playerId});
+
+        game.camera.follow(localPlayer);
     });
 
 }
-
-
-
