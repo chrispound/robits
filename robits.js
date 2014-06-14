@@ -18,7 +18,7 @@ var ignoreArrowKeys,
     players = [],
     roundReady;
 var socket = io();
-
+var layer, portalLayer;
 var colorScale = chroma.scale('RdYlBu');
 
 function preload() {
@@ -42,6 +42,7 @@ function create() {
     map.setTileIndexCallback(5, fallInHole, this);
 
     layer = map.createLayer('Tile Layer 1');
+
     layer.resizeWorld();
 
     game.world.setBounds(0, 0, map.width, map.height);
@@ -59,6 +60,10 @@ function removePlayer(id) {
     });
 
     player.destroy();
+}
+
+function someCallback(sprite, layer) {
+  console.log("you collided with a portal");
 }
 
 function addPlayer(data) {
@@ -119,7 +124,7 @@ function update() {
 }
 
 function render() {
-    if(localPlayer) {
+    if(localPlayer && DEBUG_MODE) {
         game.debug.body(localPlayer);
     }
 }
@@ -202,27 +207,6 @@ function playerDied() {
     socket.emit("player died", playerId)
 }
 
-function goThroughPortal(sprite, tile) {
-    console.log("going through portal!");
-    //teleport to other portal
-    return false;
-}
-
-function fallInHole(sprite, tile) {
-    console.log("fell in hole!");
-    // player reset
-    sprite.body.x = 0;
-    sprite.body.y = 0;
-    clearSpriteMovement(sprite);
-    return false;
-}
-
-function clearSpriteMovement(sprite) {
-    sprite.body.velocity.x = 0;
-    sprite.body.velocity.y = 0;
-    sprite.data.stepInProgress = false;
-}
-
 function playerConnected(playerId) {
     addPlayer({id: playerId});
 }
@@ -249,5 +233,25 @@ function setUpSocketReceivers() {
 
         game.camera.follow(localPlayer);
     });
+}
 
+function goThroughPortal(sprite, tile) {
+  console.log("going through portal!");
+  //teleport to other portal
+  return false;
+}
+
+function fallInHole(sprite, tile) {
+  console.log("fell in hole!");
+  // player reset
+  sprite.body.x = 0;
+  sprite.body.y = 0;
+  clearSpriteMovement(sprite);
+  return false;
+}
+
+function clearSpriteMovement(sprite) {
+  sprite.body.velocity.x = 0;
+  sprite.body.velocity.y = 0;
+  sprite.data.stepInProgress = false;
 }
