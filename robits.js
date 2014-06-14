@@ -26,7 +26,11 @@ function create() {
     var layer = map.createLayer('Tile Layer 1');
     layer.resizeWorld();
 
-    player = game.add.sprite(width / 2, height / 2, 'robot');
+    player = game.add.sprite(64, 64, 'robot');
+
+    player.anchor.setTo(0.5, 0.5);
+
+    game.camera.follow(player);
 
     widthInTiles = 16;
     heightInTiles = 12;
