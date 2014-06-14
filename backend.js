@@ -22,9 +22,6 @@ app.use(express.static(__dirname));
         console.log('User: ' + currentUser + ' disconnected');
            dropUser()
       });
-      socket.on('moved down', function(val){
-      console.log('user moved down or whatever')
-      });
           });
 
 http.listen(3000, function(){
