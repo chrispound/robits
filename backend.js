@@ -4,11 +4,11 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var players = [];
 var currentUser = 0;
-var player = function(id) {
-   var id = id
-   
-   function getId(){
-       return id;
+var player = function(value) {
+   var playerId = value
+
+   return {
+     playerId: playerId
    }
 }
 var addUser = function() {
@@ -16,7 +16,8 @@ currentUser = currentUser + 1
 players.push( new player(currentUser))
 console.log("---WE HAVE THE FOLLOWING PLAYERS CONNECTED----")
 for(i = 0; i < players.length; i++){
-    console.log(players[i].id)
+     var existingPlayer = players[i]
+    console.log('player: ' + existingPlayer.playerId)
     
 }
 
