@@ -29,15 +29,16 @@ function create() {
     var layer = map.createLayer('Tile Layer 1');
     layer.resizeWorld();
 
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.world.setBounds(0, 0, map.width, map.height);
 
+    game.physics.startSystem(Phaser.Physics.ARCADE);
 
     player = game.add.sprite(64, 64, 'robot');
     player.data = {
         movementQueue: []
     };
     game.physics.arcade.enable(player);
-
+    player.body.collideWorldBounds = true;
     player.anchor.setTo(0.5, 0.5);
 
     game.camera.follow(player);
@@ -87,7 +88,7 @@ function tryArrowKeyMovement() {
         stepInProgress = true;
 
         var distance = 128;
-        var speed = 60;
+        var speed = 500;
         var time = distance / speed;
 
         this.target = [player.x + distance, player.y];
