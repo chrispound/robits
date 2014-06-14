@@ -12,6 +12,7 @@ var widthInTiles, heightInTiles;
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.image('tileset', 'assets/tileset.png');
     game.load.image('robot', 'assets/robot.png');
 }
 
@@ -19,6 +20,8 @@ function create() {
     cursors = game.input.keyboard.createCursorKeys();
 
     map = game.add.tilemap('map');
+    map.addTilesetImage('tileset');
+
     var layer = map.createLayer('Tile Layer 1');
     layer.resizeWorld();
 

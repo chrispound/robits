@@ -20,7 +20,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "image":"..\/asset_source\/tileset.bmp",
+         "image":"..\/assets\/tileset.bmp",
          "imageheight":384,
          "imagewidth":768,
          "margin":0,
@@ -35,7 +35,7 @@
         }, 
         {
          "firstgid":19,
-         "image":"..\/asset_source\/tileset.bmp",
+       "image":"..\/assets\/tileset.bmp",
          "imageheight":384,
          "imagewidth":768,
          "margin":0,
