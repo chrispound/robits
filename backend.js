@@ -11,6 +11,7 @@ var player = function(value) {
      playerId: playerId
    }
 }
+
 var addUser = function(sessionId) {
 currentUser = currentUser + 1
 players.push( new player(sessionId))
@@ -27,9 +28,12 @@ if(io.sockets.connected[sessionId]) {
     io.emit('player joined', existingPlayer.playerId);
     console.log('player joined broadcast sent')
 }
-var dropUser = function() {
-  currentUser = currentUser -1
-players.splice(players.indexOf(currentUser), 1);
+var dropUser = function(sessionId) {
+    currentUser = currentUser -1
+    removePlayer = players.indexOf(playerById(sessionId))
+    players.splice(removePlayer, 1);
+    io.emit('player left', sessionId )
+       console.log('player left broadcast sent')
 }
 
 app.use(express.static(__dirname));
@@ -39,8 +43,8 @@ app.use(express.static(__dirname));
       console.log('User: connected');
     addUser(socket.id)
     socket.on('disconnect', function(){
-        console.log('User: ' + currentUser + ' disconnected');
-           dropUser()
+    console.log('disconnect: ' + socket.id)
+           dropUser(socket.id)
       });
     
           });
@@ -48,3 +52,13 @@ app.use(express.static(__dirname));
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+
+function playerById(id) {
+	var i;
+	for (i = 0; i < players.length; i++) {
+		if (players[i].playerId == id)
+			return players[i];
+	};
+	return false;
+};
+
