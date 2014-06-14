@@ -6,18 +6,22 @@ var w = window,
     height = w.innerHeight || e.clientHeight || g.clientHeight;
 
 var game = new Phaser.Game(width, height, Phaser.CANVAS, 'robits', { preload: preload, create: create, update: update, render: render });
-var player, board, tilemap;
+var player, board, map;
 var cursors;
 var widthInTiles, heightInTiles;
 
 function preload() {
+    game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('robot', 'assets/robot.png');
-    game.load.image('floor', 'assets/floor.jpg');
 }
 
 function create() {
     cursors = game.input.keyboard.createCursorKeys();
-    board = game.add.tileSprite(0, 0, width, height, 'floor');
+
+    map = game.add.tilemap('map');
+    var layer = map.createLayer('Tile Layer 1');
+    layer.resizeWorld();
+
     player = game.add.sprite(width / 2, height / 2, 'robot');
 
     widthInTiles = 16;
