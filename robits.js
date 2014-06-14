@@ -18,6 +18,7 @@ function preload() {
 }
 
 function create() {
+    var socket = io();
     cursors = game.input.keyboard.createCursorKeys();
 
     map = game.add.tilemap('map');
