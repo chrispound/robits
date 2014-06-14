@@ -31,6 +31,8 @@ function preload() {
 }
 
 function create() {
+
+    setUpSocketReceivers()
     cursors = game.input.keyboard.createCursorKeys();
 
     map = game.add.tilemap('map');
@@ -149,7 +151,6 @@ function moveOverTiles(entity, xTiles, yTiles) {
     entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), tileWidth / 2, map.heightInPixels - (tileWidth / 2));
 }
 
-
 function playerDisconnected(){
 
     socket.emit("plyaer left", playerId )
@@ -176,6 +177,7 @@ socket.on('player joined', function(playerId){
 
 function setUpSocketReceivers() {
 
+playerJoined()
 
 socket.on('player won', function(playerId){
      //stop the game. display ./vbcn/message
