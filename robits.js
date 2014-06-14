@@ -26,6 +26,8 @@ function preload() {
 }
 
 function create() {
+
+    setUpSocketReceivers()
     cursors = game.input.keyboard.createCursorKeys();
 
     map = game.add.tilemap('map');
@@ -136,6 +138,11 @@ function playerDisconnected() {
     socket.emit("plyaer left", playerId)
 }
 
+function playerDisconnected(){
+
+    socket.emit("player left", playerId )
+}
+
 
 function playerMoved() {
     socket.emit("player moved", 0)
@@ -160,6 +167,7 @@ function setUpSocketReceivers() {
         //stop the game. display ./vbcn/message
     });
 
+playerJoined()
 
     socket.on("update", function () {
         //probably list of all players and current positions.
