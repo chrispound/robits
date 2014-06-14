@@ -8,7 +8,8 @@ var w = window,
 var game = new Phaser.Game(width, height, Phaser.CANVAS, 'robits', { preload: preload, create: create, update: update, render: render });
 var player, board, map;
 var cursors;
-var widthInTiles, heightInTiles;
+var widthInTiles, heightInTiles, tileWidth;
+var keyboardMovement = true;
 
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -29,6 +30,7 @@ function create() {
 
     widthInTiles = 16;
     heightInTiles = 12;
+    tileWidth = 128;
 }
 
 function update() {
@@ -52,12 +54,17 @@ function tryArrowKeyMovement() {
 }
 
 function moveOverTiles(entity, xTiles, yTiles) {
-    if(!tilemap) {
+    if(!map) {
         console.error("No tilemap defined");
         return;
+    } else if(!keyboardMovement) {
+        return;
     }
-    var currentTile = tilemap.getTile(entity.x, entity.y);
-    var tileWidth = currentTile.width;
+
+    keyboardMovement = false;
+    setTimeout(function() {
+        keyboardMovement = true;
+    }, 100);
 
     entity.x = Phaser.Math.clamp(entity.x + (xTiles * tileWidth), 0, width);
     entity.y = Phaser.Math.clamp(entity.y + (yTiles * tileWidth), 0, height);
