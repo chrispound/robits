@@ -1,0 +1,10 @@
+{
+  "name": "robits",
+  "version": "0.0.1",
+  "description": "robits the game",
+  "dependencies": {
+    "bower": "~1.3.5",
+    "express": "~4.4.3",
+    "socket.io": "~1.0.4"
+  }
+}
