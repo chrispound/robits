@@ -168,6 +168,12 @@ function playerReachedCheckpoint(){
     socket.emit("checkpoint reached", playerId)
 }
 
+function playerJoined() {
+socket.on('player joined', function(playerId){
+       console.log('player joined: ' + playerId);
+});
+}
+
 function setUpSocketReceivers() {
 
 
