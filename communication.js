@@ -46,6 +46,10 @@ window.communication = (function(gameData) {
         alert("Game Over: " + playerId + " wins!");
     }
 
+    function fullGame(){
+        alert('Game full looking for new room...')
+    }
+
     function syncPlayerList(newPlayerList) {
         _.each(gameData.getPlayers(), function removeIfMissing(player) {
             var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
@@ -106,6 +110,8 @@ window.communication = (function(gameData) {
         socket.on('player died', playerDied);
 
         socket.on('all player moves ready', syncPlayerMoves);
+
+        socket.on('full game', fullGame)
     }
 })(gameData);
 
