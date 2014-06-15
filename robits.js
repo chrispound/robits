@@ -273,9 +273,8 @@ function goThroughPortal(sprite, tile) {
   if(!sprite.data.isTeleporting) {
 
     sprite.data.isTeleporting = true;
-    var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
-    var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
-    var newPosition = getTileCenter(randomPortal);
+    var nextPortal = portalTiles[(portalTiles.indexOf(tile) + 1) % portalTiles.length]
+    var newPosition = getTileCenter(nextPortal);
     sprite.body.x = newPosition.x - 64;
     sprite.body.y = newPosition.y - 64;
 
@@ -284,8 +283,12 @@ function goThroughPortal(sprite, tile) {
   return false;
 }
 
+/**
+  * Called when a sprite collides with a hole tile.
+  * The sprite is returned to their starting position
+  * and their movement is halted.
+  */
 function fallInHole(sprite, tile) {
-    console.log("fell in hole!");
     resetToStart(sprite);
     clearSpriteMovement(sprite);
     return false;

@@ -3,8 +3,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var players = [];
-var currentUser = 0;
+var players = [], rooms;
 
 var Player = function (playerId) {
     var moves;
@@ -17,7 +16,6 @@ var Player = function (playerId) {
 
 var addPlayer = function (socket) {
     var sessionId = socket.id;
-    currentUser = currentUser + 1;
     var player = new Player(sessionId);
     players.push(player);
 
@@ -39,7 +37,6 @@ var addPlayer = function (socket) {
 };
 
 var dropUser = function (sessionId) {
-    currentUser = currentUser - 1;
     var removePlayer = players.indexOf(playerById(sessionId));
     players.splice(removePlayer, 1);
 
@@ -49,7 +46,13 @@ var dropUser = function (sessionId) {
 app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
-    var player = addPlayer(socket);
+    console.log('User: connected');
+    if(players.length === 4){
+      tooManyPlayersInGame(socket.id);
+    }
+    else{
+          var player = addPlayer(socket);
+    }
 
     socket.on('player ready', function (playerData) {
         // use playerData.startTile.x and playerData.startTile.y to track
@@ -61,7 +64,9 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         log('Disconnect: ' + socket.id + '\n');
-        dropUser(socket.id)
+         if(playerById(socket.id)){
+            dropUser(socket.id)
+        }
     });
 
     socket.on('player moves ready', function (moves) {
@@ -107,11 +112,6 @@ function playerById(id) {
             return players[i];
     }
     return false;
-}
-
-function log(message) {
-    io.emit('log', message);
-    console.log(message);
 }
 
 
