@@ -6,7 +6,9 @@ window.communication = (function(gameData) {
         localPlayerReady: function() { return setPlayerReady(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
-        localPlayerWins: function() { return playerWins(gameData.localPlayer.data.id); }
+        localPlayerWins: function() { 
+            return playerWins(gameData.localPlayer.data.id); 
+        }
     };
 
     function setLocalPlayerId(playerId) {
@@ -43,6 +45,7 @@ window.communication = (function(gameData) {
     }
 
     function playerWins(playerId) {
+        gameData.restartGame(gameData.localPlayer)
         alert("Game Over: " + playerId + " wins!");
     }
 
@@ -50,17 +53,6 @@ window.communication = (function(gameData) {
         alert('Game full looking for new room...')
     }
 
-    function playerReachedCheckpoint(playerId){
-         console.log('updating player points')
-         _.each(gameData.getPlayers(), function(player){
-            if(player.data.id === playerId){
-                player.data.checkpoints++;
-                if(player.data.checkpoints >= 2){
-//                    alert('Player: ' + player.data.id + ' won! That is pretty cool.');
-                }
-             }
-         });
-    }
 
     function syncPlayerList(newPlayerList) {
         _.each(gameData.getPlayers(), function removeIfMissing(player) {
@@ -139,7 +131,6 @@ window.communication = (function(gameData) {
 
         socket.on('chat', logChatMessage);
 
-        socket.on('player checkpoint', playerReachedCheckpoint)
     }
 })(gameData);
 

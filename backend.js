@@ -3,7 +3,8 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var players = [], rooms;
+var players = [];
+var currentRoomConnection = 0;
 
 var Player = function (playerId) {
     var moves;
@@ -48,7 +49,7 @@ app.use(express.static(__dirname));
 io.sockets.on('connection', function (socket) {
     console.log('User: connected');
     if(players.length === 4){
-      tooManyPlayersInGame(socket.id);
+//      tooManyPlayersInGame(socket.id);
     }
     else{
           var player = addPlayer(socket);
@@ -132,4 +133,11 @@ function log(message) {
     console.log(message);
 }
 
-
+function tooManyPlayersInGame(id) {
+   setTimeout(function() {
+     console.log('game full creating new room')
+//     io.sockets.connected[id].emit('full game', "new room")
+     
+    },
+    1500);
+ }
