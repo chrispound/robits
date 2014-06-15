@@ -18,7 +18,6 @@ var ignoreArrowKeys,
     players = {},
     roundReady;
 var socket = io();
-var layer;
 var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
 
