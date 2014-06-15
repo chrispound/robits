@@ -15,7 +15,7 @@ var maxPlayers = 8;
 var playerId = 0;
 //initiate connection to server
 var ignoreArrowKeys,
-    players = {},
+    players = [],
     roundReady;
 var socket = io();
 var portalTiles, checkpointTiles;
@@ -30,7 +30,8 @@ $(function () {
         _.each(instructions, function (instruction) {
             addInstruction(localPlayer, instruction);
         });
-
+        socket.emit('player moves ready', instructions)
+        console.log('emited player moves')
         roundReady = true;
 
         e.preventDefault();
@@ -333,10 +334,16 @@ function syncPlayerList(newPlayerList) {
     });
 }
 
+function loadPlayerMoves(){
+//for each user add their move-set then launch the movement part of the round
+}
+
 function setUpSocketReceivers() {
     socket.on('player won', playerWins);
 
     socket.on('players changed', syncPlayerList);
+
+    socket.on('player left', removePlayer);
 
     socket.on("update", function () {
         //probably list of all players and current positions.
@@ -350,6 +357,13 @@ function setUpSocketReceivers() {
 
         game.camera.follow(localPlayer);
     });
+
+    socket.on('player died', playerDied)
+
+    socket.on('all player moves', loadPlayerMoves )
+
+//    socket.on('player moves ready', playerMovesReady);
+
 }
 
 function goThroughPortal(sprite, tile) {
