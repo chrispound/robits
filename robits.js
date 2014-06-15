@@ -1,4 +1,4 @@
-var DEBUG_MODE = false;
+var DEBUG_MODE = true;
 
 var w = window,
     d = document,
@@ -268,9 +268,9 @@ function goThroughPortal(sprite, tile) {
 
   // find a random portal that is not the current portal
   // assign the sprite body x and y to that tile.
-  if(!gameData.localPlayer.data.isTeleporting) {
+  if(!sprite.data.isTeleporting) {
 
-    gameData.localPlayer.data.isTeleporting = true;
+    sprite.data.isTeleporting = true;
     var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
     var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
     var newPosition = getTileCenter(randomPortal);
