@@ -335,8 +335,16 @@ function syncPlayerList(newPlayerList) {
     });
 }
 
-function loadPlayerMoves(){
+function syncPlayerMoves(players){
 //for each user add their move-set then launch the movement part of the round
+    console.log('syncing player moves')
+    _.each(getPlayers(), function(player) {
+        player.data.movementQueue = _.each(players, function(serverPlayer){
+        if(player.data.id === serverPlayer.playerId){
+            player.data.movementQueue = serverPlayer.moves;
+        }
+        });
+    });
 }
 
 function setUpSocketReceivers() {
@@ -361,9 +369,8 @@ function setUpSocketReceivers() {
 
     socket.on('player died', playerDied)
 
-    socket.on('all player moves', loadPlayerMoves )
+    socket.on('all player moves ready', syncPlayerMoves)
 
-//    socket.on('player moves ready', playerMovesReady);
 
 }
 
