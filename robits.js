@@ -12,7 +12,7 @@ var container = $('#robits');
 var width = container.width();
 var height = pageHeight - container.offset().top;
 
-var game = new Phaser.Game(1280, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(1024, 835, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
@@ -31,29 +31,66 @@ var sound = new Howl({
     loop: true
 }).play();
 
-
 $(function () {
     $('#chat').submit(function (e) {
         socket.emit('chat', $('#chat input').val());
         $('#chat input').val('');
         e.preventDefault();
     });
-
-    $('#plans').submit(function (e) {
-        var instructions = _.map($(this).find('.instruction'), function (command) {
-            return $(command).val();
+    
+    $('#submit-moves').click(function(e) {
+        var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
+            return $(command).html();
         });
-
-        $(this).children(':first').focus();
-
+    
         _.each(instructions, function (instruction) {
             gameData.addInstruction(gameData.localPlayer, instruction);
         });
 
         communication.localPlayerReady();
+        
         e.preventDefault();
     });
 });
+
+
+function displayPossibleMoves() {
+    
+    var possibleMovesDiv = $('#possible-moves').empty();
+    var chosenMovesDiv = $('#chosen-moves').empty();
+    _.each(generateNewMoves(), function(move) {
+        possibleMovesDiv.append(
+            "<img data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
+        );
+    });
+       
+    /**
+     * Set the callback for clicking on a move
+     */
+    $(".amove").click(function (e) {
+        chosenMovesDiv.append('<li class="instruction">' + this.dataset.move+ '</li>');
+        this.remove();
+        
+        // once 5 moves have been selected, empty the move div
+        if(possibleMovesDiv.children().length <= 5) {
+            possibleMovesDiv.empty();
+        }
+    });
+    
+    /**
+     * Generate 10 possible moves from the move array
+     * Display them in the browser to the user
+     */
+    function generateNewMoves() {
+        var newMoves = [];
+        for(i = 0; i < 10; i++) {
+            newMoves.push(_.sample(['left', 'right', 'up', 'down']));
+        }
+        return newMoves;
+    }
+};
+
+
 
 function directionToAngle(direction) {
     switch (direction) {
@@ -280,6 +317,7 @@ function updateRound() {
 
 function endRound() {
     gameData.roundReady = false;
+    displayPossibleMoves();
 }
 
 function queueMove(player, direction) {

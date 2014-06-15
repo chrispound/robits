@@ -7,6 +7,8 @@
     <link href="./bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
 
     <script src="./bower_components/jquery/dist/jquery.js"></script>
+    <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
     <script src="./bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="./bower_components/phaser/phaser.js"></script>
     <script src="./bower_components/underscore/underscore.js"></script>
@@ -23,24 +25,36 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-9">
-
-            <form id="plans" class="well">
-                <h4>Your evil plans</h4>
-                <input type="text" class="instruction" placeholder="Instruction 1" value="down"/>
-                <input type="text" class="instruction" placeholder="Instruction 2" value="right"/>
-                <input type="text" class="instruction" placeholder="Instruction 3" value="down"/>
-                <input type="text" class="instruction" placeholder="Instruction 4" value="right"/>
-                <input type="text" class="instruction" placeholder="Instruction 5" value="right"/>
-                <input type="submit" value="Ready"/>
-            </form>
-
-            <div id="robits"></div>
+            <div class="well">
+                <p>Possible Moves</p>
+                <div id="possible-moves">
+                
+                </div>
+            </div>
+            
+            <div class="col-lg-9" id="robits"></div>
+            
+            <div class="col-lg-3" id="directions">
+               <h1>How to Robits</h1>
+                <ol>
+                    <li><strong>Wait for your enemies to join.</strong></li>
+                    <li><strong>Select 5 out of 10 evil moves.</strong></li>
+                    <li><strong>Try to get to the checkpoints first!</strong></li>
+                </ol>
+                <h1>Your Evil Plan</h1>
+                <div>
+                    <ol id="chosen-moves">
+                    </ol>
+                    <button id="submit-moves" class="btn">Execute</button>
+                </div>
+            </div>
+            <p></p>
         </div>
 
         <div class="col-lg-3">
             <div class="row well">
                 <h4>Chat</h4>
-                <div id="chat-log" style="overflow-y: scroll; height:400px;"></div>
+                <div id="chat-log" style="overflow-y: scroll; height:350px;"></div>
                 <form id="chat">
                     <input class="form-control" type="text"/>
                 </form>
@@ -48,7 +62,7 @@
 
             <div class="row well">
                 <h4>Server Log</h4>
-                <div id="server-log" style="overflow-y: scroll; height:400px;"></div>
+                <div id="server-log" style="overflow-y: scroll; height:350px;"></div>
             </div>
         </div>
     </div>
