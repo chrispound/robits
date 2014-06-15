@@ -99,6 +99,15 @@ io.sockets.on('connection', function (socket) {
         io.emit('player died', playerId)
     });
 
+    socket.on('player checkpoint', function(playerId) {
+        console.log('player hit checkpoint. updating clients')
+        io.emit('player checkpoint', playerId)
+    });
+    
+    socket.on('player won', function(playerId) {
+       io.emit('player won', playerId); 
+    });
+
 });
 
 function emitPlayersChanged() {

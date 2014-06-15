@@ -158,7 +158,8 @@ function addPlayer(data) {
         startTile: startTile,
         movementQueue: [],
         id: Math.random(),
-        isTeleporting: false
+        isTeleporting: false,
+        checkpoints: []
     }, data);
 
     resetToStart(player);
@@ -283,11 +284,18 @@ function moveAtAngle(player, angle) {
 
 function hitCheckpoint(sprite, tile) {
 
-  if (!_.contains(tile.playersTouched, sprite.data.id)) {
+    // only emit a player checkpoint event if it is the local player 
+    // and it is not in the tiles array of players touched
+  if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
     console.log("player scored a checkpoint");
     tile.playersTouched.push(sprite.data.id);
+      if(_.every(checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
+          console.log("player touched last checkpoint, send win event!");
+        socket.emit("player won", sprite.data.id);
+      };
+      // useful later if we want to update each client with the players checkpoint data
+//    socket.emit("player checkpoint", sprite.data.id);
   }
-  //check win?
 }
 
 function goThroughPortal(sprite, tile) {
