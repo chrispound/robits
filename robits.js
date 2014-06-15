@@ -93,7 +93,7 @@ function create() {
 
     startTiles = getTilesOfIndex(2);
 
-    if(DEBUG_MODE) {
+    if (DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         var leftButton = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         var upButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -102,6 +102,7 @@ function create() {
         function proxyQueueMove(direction) {
             queueMove(localPlayer, direction)
         }
+
         downButton.onDown.add(_.partial(proxyQueueMove, 'down'), this);
         leftButton.onDown.add(_.partial(proxyQueueMove, 'left'), this);
         upButton.onDown.add(_.partial(proxyQueueMove, 'up'), this);
@@ -124,8 +125,8 @@ function someCallback(sprite, layer) {
 }
 
 function chooseStartTile() {
-    var unusedTile = _.find(startTiles, function(tile) {
-        return !_.some(players, function(player) {
+    var unusedTile = _.find(startTiles, function (tile) {
+        return !_.some(players, function (player) {
             return player.data.startTile.x === tile.x &&
                 player.data.startTile.y === tile.y;
         });
@@ -200,7 +201,7 @@ function update() {
 }
 
 function render() {
-    if(localPlayer && DEBUG_MODE) {
+    if (localPlayer && DEBUG_MODE) {
         game.debug.body(localPlayer);
     }
 }
@@ -257,8 +258,19 @@ function moveAtAngle(player, angle) {
     setTimeout(_.partial(clearSpriteMovement, player), time * 1000);
 }
 
+function getPlayerBroadcastInfo(player) {
+    return {
+        id: localPlayer.data.id,
+        movementQueue: localPlayer.data.movementQueue,
+        startTile: {
+            x: localPlayer.data.startTile.x,
+            y: localPlayer.data.startTile.y
+        }
+    }
+}
+
 function setPlayerReady() {
-    socket.emit("player ready", localPlayer.data);
+    socket.emit("player ready", getPlayerBroadcastInfo(localPlayer));
 }
 
 function disconnect() {
@@ -364,7 +376,7 @@ function getTileCenter(tile) {
 }
 
 function getTilesOfIndex(tileIndex) {
-    return _.filter(_.flatten(layer.layer.data, true), function(tile) {
+    return _.filter(_.flatten(layer.layer.data, true), function (tile) {
         return tile.index === tileIndex;
     });
 }

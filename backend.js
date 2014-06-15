@@ -51,7 +51,8 @@ io.sockets.on('connection', function (socket) {
         // use playerData.startTile.x and playerData.startTile.y to track
         // where player's start tile is
 
-        // also has playerData.movementQueue of commands, but that's empty here
+        // also has player.id and playerData.movementQueue of commands, but that
+        // should be empty at this point
     });
 
     socket.on('disconnect', function () {
