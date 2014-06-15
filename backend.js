@@ -71,7 +71,7 @@ io.sockets.on('connection', function (socket) {
                    return _.size(player.moves) === 0;
            })){
                   console.log('all moves received ')
-                  io.emit('player moves ready', players)
+                  io.emit('all player moves ready', players)
            }
 
 

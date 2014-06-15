@@ -18,7 +18,6 @@ var ignoreArrowKeys,
     players = [],
     roundReady;
 var socket = io();
-var layer;
 var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
 
@@ -33,8 +32,6 @@ $(function () {
         });
         socket.emit('player moves ready', instructions)
         console.log('emited player moves')
-        roundReady = true;
-
         e.preventDefault();
     });
 });
@@ -79,6 +76,7 @@ function create() {
 
     map.setCollision(6);
     map.setTileIndexCallback(3, goThroughPortal, this);
+    map.setTileIndexCallback(4, hitCheckpoint, this);
     map.setTileIndexCallback(5, fallInHole, this);
 
     layer = map.createLayer('Tile Layer 1');
@@ -96,6 +94,10 @@ function create() {
     startTiles = getTilesOfIndex(2);
     portalTiles = getTilesOfIndex(3);
     checkpointTiles = getTilesOfIndex(4);
+
+    _.each(checkpointTiles, function(tile) {
+      tile.playersTouched = [];
+    });
 
     if(DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -122,10 +124,6 @@ function removePlayer(id) {
     delete players[player.data.id];
 
     player.destroy();
-}
-
-function someCallback(sprite, layer) {
-    console.log("you collided with a portal");
 }
 
 function chooseStartTile() {
@@ -182,7 +180,7 @@ var timingOut = false;
 
 function clearTeleportFlags() {
   var BOUNDARY = 65;
-  _.each(players, function(player) {
+  _.each(getPlayers(), function(player) {
     if(!_.some(portalTiles, function(tile) {
       return tile.intersects(player.x - BOUNDARY, player.y - BOUNDARY, player.x + BOUNDARY, player.y + BOUNDARY);
     })) {
@@ -333,8 +331,20 @@ function syncPlayerList(newPlayerList) {
     });
 }
 
-function loadPlayerMoves(){
+function syncPlayerMoves(players){
 //for each user add their move-set then launch the movement part of the round
+    console.log('syncing player moves')
+    _.each(getPlayers(), function(player) {
+        _.each(players, function(serverPlayer){
+        if(player.data.id === serverPlayer.playerId){
+                  _.each(serverPlayer.moves, function (instruction) {
+                        addInstruction(player, instruction);
+                    });
+        }
+        });
+        console.log('queue after sync: '+ player.data.movementQueue)
+    });
+    roundReady = true;
 }
 
 function setUpSocketReceivers() {
@@ -359,10 +369,18 @@ function setUpSocketReceivers() {
 
     socket.on('player died', playerDied)
 
-    socket.on('all player moves', loadPlayerMoves )
+    socket.on('all player moves ready', syncPlayerMoves)
 
-//    socket.on('player moves ready', playerMovesReady);
 
+}
+
+function hitCheckpoint(sprite, tile) {
+
+  if (!_.contains(tile.playersTouched, sprite.data.id)) {
+    console.log("player scored a checkpoint");
+    tile.playersTouched.push(sprite.data.id);
+  }
+  //check win?
 }
 
 function goThroughPortal(sprite, tile) {
@@ -375,10 +393,8 @@ function goThroughPortal(sprite, tile) {
     var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
     var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
     var newPosition = getTileCenter(randomPortal);
-    console.log("new position: " + newPosition.x + " " + newPosition.y);
     sprite.body.x = newPosition.x - 64;
     sprite.body.y = newPosition.y - 64;
-    centerOnTile(sprite);
 
   }
 
