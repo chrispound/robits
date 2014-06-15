@@ -8,7 +8,7 @@ var w = window,
     height = w.innerHeight || e.clientHeight || g.clientHeight;
 
 var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
-var localPlayer, layer, map;
+var localPlayer, layer, map, startTiles;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
@@ -70,7 +70,6 @@ function create() {
 
     setUpSocketReceivers();
     cursors = game.input.keyboard.createCursorKeys();
-
     game.stage.backgroundColor = '#787878';
 
     map = game.add.tilemap('map');
@@ -91,6 +90,8 @@ function create() {
     widthInTiles = 16;
     heightInTiles = 12;
     tileWidth = 128;
+
+    startTiles = getTilesOfIndex(2);
 
     if(DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -122,9 +123,24 @@ function someCallback(sprite, layer) {
     console.log("you collided with a portal");
 }
 
-function addPlayer(data) {
-    var startTile = map.getTile(0, 0);
+function chooseStartTile() {
+    var unusedTile = _.find(startTiles, function(tile) {
+        return !_.some(players, function(player) {
+            return player.data.startTile.x === tile.x &&
+                player.data.startTile.y === tile.y;
+        });
+    });
 
+    var randomTile = startTiles[Math.floor(Math.random() * startTiles.length)];
+
+    console.log(unusedTile);
+
+    return unusedTile || randomTile;
+}
+
+function addPlayer(data) {
+
+    var startTile = chooseStartTile();
 
     var player = game.add.sprite(0, 0, 'robot');
 
@@ -340,4 +356,10 @@ function centerOnTile(sprite) {
 
 function getTileCenter(tile) {
     return {x: tile.worldX + (tile.width / 2), y: tile.worldY + (tile.height / 2)};
+}
+
+function getTilesOfIndex(tileIndex) {
+    return _.filter(_.flatten(layer.layer.data, true), function(tile) {
+        return tile.index === tileIndex;
+    });
 }
