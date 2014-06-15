@@ -1,28 +1,38 @@
 window.communication = (function(gameData) {
     console.log("Loading communication module");
 
+    var getIdPromise = $.Deferred(), serverStateLoadedPromise = $.Deferred();
+
+    getIdPromise.then(function(id) {
+        console.log('Local player is now known as: ' + id)
+    });
+
+    serverStateLoadedPromise.then(function() {
+        console.log('Received current stage state')
+    });
+
+    $.when(getIdPromise, serverStateLoadedPromise).then(function() {
+        gameData.serverSetup.resolve();
+    });
+
     return {
         initializeSocket: setUpSocketReceivers,
-        localPlayerReady: function() { return setPlayerReady(gameData.localPlayer); },
+        localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
+        localPlayerSetupComplete: function() { return setPlayerSetupComplete(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
         localPlayerWins: function() { return playerWins(gameData.localPlayer.data.id); }
     };
 
-    function setLocalPlayerId(playerId) {
-        console.log('Local player is now known as: ' + playerId);
-
-        gameData.localPlayer = addPlayer({id: playerId});
-        
-        setPlayerReady(gameData.localPlayer);
-
-        gameData.game.camera.follow(gameData.localPlayer);
+    function setLocalPlayerId(id) {
+        gameData.localPlayerId = id;
+        getIdPromise.resolve(id);
     }
 
     function getPlayerBroadcastInfo(player) {
         return {
             id: player.data.id,
-            movementQueue: player.data.movementQueue,
+            movementQueue: _.map(player.data.movementQueue, function(moveFunction) { return moveFunction.instruction; }),
             startTile: {
                 x: player.data.startTile.x,
                 y: player.data.startTile.y
@@ -30,8 +40,12 @@ window.communication = (function(gameData) {
         }
     }
 
-    function setPlayerReady(player) {
-        socket.emit("player ready", getPlayerBroadcastInfo(player));
+    function setPlayerSetupComplete(player) {
+        socket.emit("player setup complete", getPlayerBroadcastInfo(player));
+    }
+
+    function setPlayerRoundReady(player) {
+        socket.emit("player moves ready", getPlayerBroadcastInfo(player));
     }
 
     function disconnect(player) {
@@ -42,18 +56,26 @@ window.communication = (function(gameData) {
         socket.emit("player died", player.data.id)
     }
 
-    function playerWins(playerId) {
-        alert("Game Over: " + playerId + " wins!");
+    function playerWins(id) {
+        alert("Game Over: " + id + " wins!");
     }
 
     function fullGame(){
         alert('Game full looking for new room...')
     }
 
-    function playerReachedCheckpoint(playerId){
-         console.log('updating player points')
+    function updateGameData(serverGameInfo) {
+        console.log(serverGameInfo);
+
+        console.log(serverGameInfo);
+        gameData.assignedStartTiles = serverGameInfo.assignedStartTiles || {};
+        serverStateLoadedPromise.resolve();
+    }
+
+    function playerReachedCheckpoint(id){
+         console.log('updating player points');
          _.each(gameData.getPlayers(), function(player){
-            if(player.data.id === playerId){
+            if(player.data.id === id){
                 player.data.checkpoints++;
                 if(player.data.checkpoints >= 2){
 //                    alert('Player: ' + player.data.id + ' won! That is pretty cool.');
@@ -63,26 +85,28 @@ window.communication = (function(gameData) {
     }
 
     function syncPlayerList(newPlayerList) {
-        _.each(gameData.getPlayers(), function removeIfMissing(player) {
-            var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
-                return newPlayer.playerId === player.data.id;
+        gameData.gameSetup.then(function(){
+            _.each(gameData.getPlayers(), function removeIfMissing(player) {
+                var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
+                    return newPlayer.id === player.data.id;
+                });
+
+                if (playerDisappeared) {
+                    removePlayer(player.data.id);
+                    console.log("Removing player " + player.data.id)
+                }
             });
 
-            if (playerDisappeared) {
-                removePlayer(player.data.id);
-                console.log("Removing player " + player.data.id)
-            }
-        });
+            _.each(newPlayerList, function addIfMissing(newPlayer) {
+                var playerIsNew = !_.some(gameData.getPlayers(), function (player) {
+                    return player.data.id === newPlayer.id;
+                });
 
-        _.each(newPlayerList, function addIfMissing(newPlayer) {
-            var playerIsNew = !_.some(gameData.getPlayers(), function (player) {
-                return player.data.id === newPlayer.playerId;
+                if (playerIsNew) {
+                    addPlayer({id: newPlayer.id});
+                    console.log("Adding player " + newPlayer.id)
+                }
             });
-
-            if (playerIsNew) {
-                addPlayer({id: newPlayer.playerId});
-                console.log("Adding player " + newPlayer.playerId)
-            }
         });
     }
 
@@ -99,13 +123,13 @@ window.communication = (function(gameData) {
         console.log('Syncing player moves');
         _.each(gameData.getPlayers(), function(player) {
             _.each(serverPlayers, function(serverPlayer){
-                if(player.data.id === serverPlayer.playerId){
+                if(player.data.id === serverPlayer.id){
                     _.each(serverPlayer.moves, function (instruction) {
                         gameData.addInstruction(player, instruction);
                     });
                 }
             });
-            console.log('(what does this message mean?) Queue moves after sync: '+ player.data.movementQueue)
+            //console.log('(what does this message mean?) Queue moves after sync: '+ player.data.movementQueue)
         });
         gameData.roundReady = true;
     }
@@ -127,7 +151,7 @@ window.communication = (function(gameData) {
 
         socket.on('player left', removePlayer);
 
-        socket.on('receive id', setLocalPlayerId);
+        socket.on('assign id', setLocalPlayerId);
 
         socket.on('player died', playerDied);
 
@@ -139,7 +163,9 @@ window.communication = (function(gameData) {
 
         socket.on('chat', logChatMessage);
 
-        socket.on('player checkpoint', playerReachedCheckpoint)
+        socket.on('player checkpoint', playerReachedCheckpoint);
+
+        socket.on('game info', updateGameData);
     }
 })(gameData);
 

@@ -1,4 +1,4 @@
-var DEBUG_MODE = true;
+var DEBUG_MODE = false;//true;
 
 var w = window,
     d = document,
@@ -18,13 +18,13 @@ var layer, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
-var playerId = 0;
-//initiate connection to server
-var ignoreArrowKeys,
-    _players = [];
+
+var _players = [];
 var socket = io();
-var portalTiles, checkpointTiles;
+var startTiles, portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
+
+window.communication.initializeSocket();
 
 $(function () {
     $('#chat').submit(function (e) {
@@ -40,11 +40,11 @@ $(function () {
 
         $(this).children(':first').focus();
 
-//        _.each(instructions, function (instruction) {
-//            gameData.addInstruction(gameData.localPlayer, instruction);
-//        });
-        socket.emit('player moves ready', instructions);
-        console.log('Emitted player moves');
+        _.each(instructions, function (instruction) {
+            gameData.addInstruction(gameData.localPlayer, instruction);
+        });
+
+        communication.localPlayerReady();
         e.preventDefault();
     });
 });
@@ -87,7 +87,6 @@ function resizeGame() {
 
 function create() {
     gameData.game = game;
-    window.communication.initializeSocket();
 
     cursors = game.input.keyboard.createCursorKeys();
     game.stage.backgroundColor = '#787878';
@@ -118,6 +117,15 @@ function create() {
       tile.playersTouched = [];
     });
 
+    var localPlayerSetup = $.Deferred();
+    gameData.serverSetup.then(function() {
+        gameData.localPlayer = addPlayer({id: gameData.localPlayerId});
+        gameData.game.camera.follow(gameData.localPlayer);
+
+        communication.localPlayerSetupComplete();
+        localPlayerSetup.resolve();
+    });
+
     if(DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         var leftButton = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
@@ -133,14 +141,26 @@ function create() {
         upButton.onDown.add(_.partial(proxyQueueMove, 'up'), this);
         rightButton.onDown.add(_.partial(proxyQueueMove, 'right'), this);
     }
+
+    localPlayerSetup.then(function() {
+        gameData.clientSetup.resolve();
+    });
 }
 
-function chooseStartTile() {
+function chooseStartTile(playerId) {
+    var alreadyDefinedTile = gameData.assignedStartTiles[playerId];
+    if(alreadyDefinedTile) {
+        return map.getTile(alreadyDefinedTile.x, alreadyDefinedTile.y);
+    }
+
     var unusedTile = _.find(startTiles, function (tile) {
-        return !_.some(gameData.getPlayers(), function (player) {
+        return !_.some(gameData.assignedStartTiles, function(assignedTile) {
+            return tile.x === assignedTile.x && tile.y === assignedTile.y;
+        });
+        /*return !_.some(gameData.getPlayers(), function (player) {
             return player.data.startTile.x === tile.x &&
                 player.data.startTile.y === tile.y;
-        });
+        });*/
     });
 
     var randomTile = startTiles[Math.floor(Math.random() * startTiles.length)];
@@ -148,19 +168,18 @@ function chooseStartTile() {
     return unusedTile || randomTile;
 }
 
-function addPlayer(data) {
-
-    var startTile = chooseStartTile();
+function addPlayer(overwriteData) {
 
     var player = game.add.sprite(0, 0, 'robot');
 
     player.data = _.extend({
-        startTile: startTile,
         movementQueue: [],
         id: Math.random(),
         isTeleporting: false,
         checkpoints: []
-    }, data);
+    }, overwriteData);
+
+    player.data.startTile = chooseStartTile(player.data.id);
 
     resetToStart(player);
     game.physics.arcade.enable(player);

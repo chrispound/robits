@@ -1,6 +1,29 @@
 console.log("Loading: game data");
 
+var clientSetupPromise = $.Deferred(),
+    serverSetupPromise = $.Deferred();
+
+var gameSetupPromise = $.when(clientSetupPromise, serverSetupPromise);
+
+clientSetupPromise.then(function() {
+    console.log('Setup by client done');
+});
+
+serverSetupPromise.then(function() {
+    console.log('Setup by server done');
+});
+
+gameSetupPromise.then(function() {
+    console.log('Game setup complete');
+    console.log(gameData.assignedStartTiles);
+});
+
 window.gameData = {
+    localPlayerId: null,
+    clientSetup: clientSetupPromise,
+    serverSetup: serverSetupPromise,
+    gameSetup: gameSetupPromise,
+    assignedStartTiles: {},
     game: null,
     localPlayer: null,
     roundReady: false,
@@ -15,6 +38,8 @@ window.gameData = {
         player.destroy();
     },
     addInstruction: function (player, instruction) {
-        player.data.movementQueue.push(_.partial(moveAtAngle, player, directionToAngle(instruction)));
+        var moveFunction = _.partial(moveAtAngle, player, directionToAngle(instruction));
+        moveFunction.instruction = instruction;
+        player.data.movementQueue.push(moveFunction);
     }
 };

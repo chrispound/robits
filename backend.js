@@ -3,14 +3,14 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var players = [], rooms;
+var players = [];
 
-var Player = function (playerId) {
+var Player = function (id) {
     var moves;
 
     return {
         moves: moves,
-        playerId: playerId
+        id: id
     }
 };
 
@@ -23,15 +23,14 @@ var addPlayer = function (socket) {
 
     for (var i = 0; i < players.length; i++) {
         var existingPlayer = players[i];
-        log(existingPlayer.playerId)
+        log(existingPlayer.id)
     }
 
     log("--------------------------------------------\n");
 
-    setTimeout(function () {
-        io.emit('receive id', existingPlayer.playerId);
-        emitPlayersChanged();
-    }, 1500);
+    socket.emit('assign id', existingPlayer.id);
+
+    emitGameChanged();
 
     return player;
 };
@@ -40,22 +39,54 @@ var dropUser = function (sessionId) {
     var removePlayer = players.indexOf(playerById(sessionId));
     players.splice(removePlayer, 1);
 
-    emitPlayersChanged();
+    emitGameChanged();
 };
+
+function updatePlayer(clientPlayerData) {
+    var player = _.findWhere(players, {id: clientPlayerData.id});
+
+    if(!player) {
+        player = new Player(clientPlayerData.id);
+    }
+
+    _.extend(player, {
+        startTile: clientPlayerData.startTile,
+        moves: clientPlayerData.movementQueue
+    });
+}
+
+function buildGameInfo() {
+    return {
+        assignedStartTiles: _.object(_.map(players, function (player) {
+                return player.id;
+            }),
+            _.map(players, function (player) {
+                return player.startTile;
+            }))
+    };
+}
 
 app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
     console.log('User: connected');
-    if(players.length === 4){
-      tooManyPlayersInGame(socket.id);
-    }
-    else{
-          var player = addPlayer(socket);
+
+    socket.emit('game info', buildGameInfo());
+
+    if (players.length === 4) {
+        tooManyPlayersInGame(socket.id);
+    } else {
+        var player = addPlayer(socket);
     }
 
-    socket.on('chat', function(message) {
+    socket.on('chat', function (message) {
         io.emit('chat', socket.id + ": " + message);
+    });
+
+    socket.on('player setup complete', function (playerData) {
+        console.log('here', playerData);
+        updatePlayer(playerData);
+        emitGameChanged();
     });
 
     socket.on('player ready', function (playerData) {
@@ -68,22 +99,23 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         log('Disconnect: ' + socket.id + '\n');
-         if(playerById(socket.id)){
+        if (playerById(socket.id)) {
             dropUser(socket.id)
         }
     });
 
-    socket.on('player moves ready', function (moves) {
+    socket.on('player moves ready', function (player) {
+        var moves = player.movementQueue;
         var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
 
-        log("Player " + updatePlayer.playerId + " is ready");
+        log("Player " + updatePlayer.id + " is ready");
 
         var allPlayersReady = !_.some(players, function (player) {
             return _.size(player.moves) === 0;
         });
 
-        if(allPlayersReady) {
+        if (allPlayersReady) {
             log('*** All players are ready ***');
 
             io.emit('all player moves ready', players);
@@ -95,22 +127,24 @@ io.sockets.on('connection', function (socket) {
         }
 
     });
-    socket.on('player died', function (playerId) {
-        io.emit('player died', playerId)
+
+    socket.on('player died', function (id) {
+        io.emit('player died', id)
     });
 
-    socket.on('player checkpoint', function(playerId) {
-        console.log('player hit checkpoint. updating clients')
-        io.emit('player checkpoint', playerId)
+    socket.on('player checkpoint', function (id) {
+        console.log('player hit checkpoint. updating clients');
+        io.emit('player checkpoint', id)
     });
-    
-    socket.on('player won', function(playerId) {
-       io.emit('player won', playerId); 
+
+    socket.on('player won', function (id) {
+        io.emit('player won', id);
     });
 
 });
 
-function emitPlayersChanged() {
+function emitGameChanged() {
+    io.emit('game info', buildGameInfo());
     io.emit('players changed', players);
 }
 
@@ -121,7 +155,7 @@ http.listen(3000, function () {
 function playerById(id) {
     var i;
     for (i = 0; i < players.length; i++) {
-        if (players[i].playerId == id)
+        if (players[i].id === id)
             return players[i];
     }
     return false;
