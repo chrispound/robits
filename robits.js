@@ -130,15 +130,13 @@ function someCallback(sprite, layer) {
 
 function chooseStartTile() {
     var unusedTile = _.find(startTiles, function (tile) {
-        return !_.some(players, function (player) {
+        return !_.some(getPlayers(), function (player) {
             return player.data.startTile.x === tile.x &&
                 player.data.startTile.y === tile.y;
         });
     });
 
     var randomTile = startTiles[Math.floor(Math.random() * startTiles.length)];
-
-    console.log(unusedTile);
 
     return unusedTile || randomTile;
 }
