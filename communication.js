@@ -94,6 +94,11 @@ window.communication = (function(gameData) {
         gameData.roundReady = true;
     }
 
+    function logMessage(message) {
+        var log = $('#server-log');
+        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+    }
+
     function setUpSocketReceivers() {
         socket.on('player won', playerWins);
 
@@ -106,6 +111,8 @@ window.communication = (function(gameData) {
         socket.on('player died', playerDied);
 
         socket.on('all player moves ready', syncPlayerMoves);
+
+        socket.on('log', logMessage);
     }
 })(gameData);
 

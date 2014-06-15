@@ -21,14 +21,14 @@ var addPlayer = function (socket) {
     var player = new Player(sessionId);
     players.push(player);
 
-    console.log("--- THE FOLLOWING PLAYERS ARE CONNECTED ----");
+    log("--- THE FOLLOWING PLAYERS ARE CONNECTED ----");
 
     for (var i = 0; i < players.length; i++) {
         var existingPlayer = players[i];
-        console.log(existingPlayer.playerId)
+        log(existingPlayer.playerId)
     }
 
-    console.log("--------------------------------------------\n");
+    log("--------------------------------------------\n");
 
     setTimeout(function () {
         io.emit('receive id', existingPlayer.playerId);
@@ -48,7 +48,6 @@ var dropUser = function (sessionId) {
 
 app.use(express.static(__dirname));
 
-
 io.sockets.on('connection', function (socket) {
     var player = addPlayer(socket);
 
@@ -61,7 +60,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
-        console.log('Disconnect: ' + socket.id + '\n');
+        log('Disconnect: ' + socket.id + '\n');
         dropUser(socket.id)
     });
 
@@ -69,14 +68,14 @@ io.sockets.on('connection', function (socket) {
         var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
 
-        console.log("Player " + updatePlayer.playerId + " is ready");
+        log("Player " + updatePlayer.playerId + " is ready");
 
         var allPlayersReady = !_.some(players, function (player) {
             return _.size(player.moves) === 0;
         });
 
         if(allPlayersReady) {
-            console.log('*** All players are ready ***');
+            log('*** All players are ready ***');
 
             io.emit('all player moves ready', players);
             _.each(players, clearMoves);
@@ -98,7 +97,7 @@ function emitPlayersChanged() {
 }
 
 http.listen(3000, function () {
-    console.log('\nlistening on *:3000\n');
+    log('\nlistening on *:3000\n');
 });
 
 function playerById(id) {
@@ -108,6 +107,11 @@ function playerById(id) {
             return players[i];
     }
     return false;
+}
+
+function log(message) {
+    io.emit('log', message);
+    console.log(message);
 }
 
 

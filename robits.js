@@ -27,6 +27,8 @@ $(function () {
             return $(command).val();
         });
 
+        $(this).children(':first').focus();
+
 //        _.each(instructions, function (instruction) {
 //            gameData.addInstruction(gameData.localPlayer, instruction);
 //        });

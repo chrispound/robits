@@ -2,39 +2,46 @@
 <html>
 <head>
     <meta charset="UTF-8">
-<title>Robits</title>
+    <title>Robits</title>
 
-<script src="./bower_components/phaser/phaser.js"></script>
-<script src="./bower_components/underscore/underscore.js"></script>
-<script src="./bower_components/jquery/dist/jquery.js"></script>
-<script src="./bower_components/chroma-js/chroma.js"></script>
-<script src="/socket.io/socket.io.js"></script>
+    <link href="./bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
 
+    <script src="./bower_components/jquery/dist/jquery.js"></script>
+    <script src="./bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="./bower_components/phaser/phaser.js"></script>
+    <script src="./bower_components/underscore/underscore.js"></script>
+    <script src="./bower_components/chroma-js/chroma.js"></script>
+    <script src="./bower_components/howler/howler.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
-<script src="gameData.js"></script>
-<script src="communication.js"></script>
-<script src="robits.js" defer></script>
-
+    <script src="gameData.js"></script>
+    <script src="communication.js"></script>
+    <script src="robits.js" defer></script>
 </head>
 <body cz-shortcut-listen="true">
 
-<div id="game"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
 
-<div>
-    Your evil plans
+            <h4>Your evil plans</h4>
+            <form id="plans">
+                <input type="text" class="instruction" placeholder="Instruction 1" value="down"/>
+                <input type="text" class="instruction" placeholder="Instruction 2" value="right"/>
+                <input type="text" class="instruction" placeholder="Instruction 3" value="down"/>
+                <input type="text" class="instruction" placeholder="Instruction 4" value="right"/>
+                <input type="text" class="instruction" placeholder="Instruction 5" value="right"/>
+                <input type="submit" value="Ready"/>
+            </form>
 
-    <form id="plans">
-        <input type="text" class="instruction" placeholder="Instruction 1" value="down"/>
-        <input type="text" class="instruction" placeholder="Instruction 2" value="right"/>
-        <input type="text" class="instruction" placeholder="Instruction 3" value="down"/>
-        <input type="text" class="instruction" placeholder="Instruction 4" value="right"/>
-        <input type="text" class="instruction" placeholder="Instruction 5" value="right"/>
-        <input type="submit" value="Ready"/>
-    </form>
+            <div id="robits"></div>
+        </div>
+
+        <h4>Server Log</h4>
+        <div id="server-log" class="col-lg-4" style="overflow-y: scroll; height:400px;">
+
+        </div>
+    </div>
 </div>
-
-
-<script src="bower_components/howler/howler.js"></script>
-<script src="bower_components/jquery/dist/jquery.js"></script>
 </body>
 </html>
