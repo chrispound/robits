@@ -78,6 +78,7 @@ function create() {
 
     map.setCollision(6);
     map.setTileIndexCallback(3, goThroughPortal, this);
+    map.setTileIndexCallback(4, hitCheckpoint, this);
     map.setTileIndexCallback(5, fallInHole, this);
 
     layer = map.createLayer('Tile Layer 1');
@@ -95,6 +96,10 @@ function create() {
     startTiles = getTilesOfIndex(2);
     portalTiles = getTilesOfIndex(3);
     checkpointTiles = getTilesOfIndex(4);
+
+    _.each(checkpointTiles, function(tile) {
+      tile.playersTouched = [];
+    });
 
     if(DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -121,10 +126,6 @@ function removePlayer(id) {
     delete players[player.data.id];
 
     player.destroy();
-}
-
-function someCallback(sprite, layer) {
-    console.log("you collided with a portal");
 }
 
 function chooseStartTile() {
@@ -183,7 +184,7 @@ var timingOut = false;
 
 function clearTeleportFlags() {
   var BOUNDARY = 65;
-  _.each(players, function(player) {
+  _.each(getPlayers(), function(player) {
     if(!_.some(portalTiles, function(tile) {
       return tile.intersects(player.x - BOUNDARY, player.y - BOUNDARY, player.x + BOUNDARY, player.y + BOUNDARY);
     })) {
@@ -366,6 +367,15 @@ function setUpSocketReceivers() {
 
 }
 
+function hitCheckpoint(sprite, tile) {
+
+  if (!_.contains(tile.playersTouched, sprite.data.id)) {
+    console.log("player scored a checkpoint");
+    tile.playersTouched.push(sprite.data.id);
+  }
+  //check win?
+}
+
 function goThroughPortal(sprite, tile) {
 
   // find a random portal that is not the current portal
@@ -376,10 +386,8 @@ function goThroughPortal(sprite, tile) {
     var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
     var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
     var newPosition = getTileCenter(randomPortal);
-    console.log("new position: " + newPosition.x + " " + newPosition.y);
     sprite.body.x = newPosition.x - 64;
     sprite.body.y = newPosition.y - 64;
-    centerOnTile(sprite);
 
   }
 
