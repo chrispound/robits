@@ -23,7 +23,7 @@ var playerId = 0;
 var ignoreArrowKeys,
     _players = [];
 var socket = io();
-var portalTiles, checkpointTiles;
+var portalTiles;
 var colorScale = chroma.scale('RdYlBu');
 
 var sound = new Howl({
@@ -118,9 +118,9 @@ function create() {
 
     startTiles = getTilesOfIndex(2);
     portalTiles = getTilesOfIndex(3);
-    checkpointTiles = getTilesOfIndex(4);
+    gameData.checkpointTiles = getTilesOfIndex(4);
 
-    _.each(checkpointTiles, function(tile) {
+    _.each(gameData.checkpointTiles, function(tile) {
       tile.playersTouched = [];
     });
 
@@ -300,9 +300,9 @@ function hitCheckpoint(sprite, tile) {
   if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
     console.log("player scored a checkpoint");
     tile.playersTouched.push(sprite.data.id);
-      if(_.every(checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
+      if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
           console.log("player touched last checkpoint, send win event!");
-        socket.emit("player won", sprite.data.id);
+          socket.emit("player won", sprite.data.id);
       };
       // useful later if we want to update each client with the players checkpoint data
 //    socket.emit("player checkpoint", sprite.data.id);
