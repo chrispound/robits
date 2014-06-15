@@ -114,4 +114,9 @@ function playerById(id) {
     return false;
 }
 
+function log(message) {
+    io.emit('log', message);
+    console.log(message);
+}
+
 
