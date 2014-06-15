@@ -1,4 +1,4 @@
-var DEBUG_MODE = true;
+var DEBUG_MODE = false;//true;
 
 var w = window,
     d = document,
@@ -21,6 +21,40 @@ var socket = io();
 var layer, portalLayer;
 var colorScale = chroma.scale('RdYlBu');
 
+$(function(){
+    $('#plans').submit(function(e) {
+        var instructions = _.map($(this).find('.instruction'), function(command) {
+            return $(command).val();
+        });
+
+        _.each(instructions, function(instruction) {
+            addInstruction(localPlayer, instruction);
+        });
+
+        roundReady = true;
+
+        e.preventDefault();
+    });
+});
+
+function addInstruction(player, instruction) {
+    player.data.movementQueue.push(_.partial(moveAtAngle, player, directionToAngle(instruction)));
+}
+
+function directionToAngle(direction) {
+    switch(direction) {
+        case 'right':
+            return 0;
+        case 'left':
+            return 180;
+        case 'down':
+            return 90;
+        case 'up':
+            return 270;
+        default:
+            return 0;
+    }
+}
 
 function getPlayers() {
     return _.values(players);
@@ -116,13 +150,13 @@ function update() {
     } else {
         //planning stage
 
-        _.each(getPlayers(), function(player) {
+        /*_.each(getPlayers(), function(player) {
             addRandomPath(player);
         });
 
-        roundReady = true;
+        roundReady = true;*/
 
-        /*if (localPlayer && DEBUG_MODE) {
+        if (localPlayer && DEBUG_MODE) {
             queueMovesWithArrowKeys(localPlayer);
 
             if(!timingOut) {
@@ -134,7 +168,7 @@ function update() {
                     }
                 }, 3000);
             }
-        }*/
+        }
     }
 }
 
@@ -168,16 +202,19 @@ function endRound() {
 
 function queueMovesWithArrowKeys(player) {
     if (!ignoreArrowKeys) {
-        var angle;
+        var angle, direction;
         if (cursors.right.isDown) {
-            angle = 0;
+            direction = 'right';
         } else if (cursors.left.isDown) {
-            angle = 180;
+            direction = 'left';
         } else if (cursors.down.isDown) {
-            angle = 90;
+            direction = 'down';
         } else if (cursors.up.isDown) {
-            angle = 270;
+            direction = 'up';
         }
+
+        angle = directionToAngle(direction);
+
         if (!_.isUndefined(angle)) {
             player.data.movementQueue.push(_.partial(moveAtAngle, player, angle));
         }

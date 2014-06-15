@@ -6,6 +6,7 @@
 
 <script src="./bower_components/phaser/phaser.js"></script>
 <script src="./bower_components/underscore/underscore.js"></script>
+<script src="./bower_components/jquery/dist/jquery.js"></script>
 <script src="./bower_components/chroma-js/chroma.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="robits.js"></script>
@@ -13,6 +14,19 @@
 <body cz-shortcut-listen="true">
 
 <div id="game"></div>
+
+<div>
+    Your evil plans
+
+    <form id="plans">
+        <input type="text" class="instruction" placeholder="Instruction 1" value="down"/>
+        <input type="text" class="instruction" placeholder="Instruction 2" value="right"/>
+        <input type="text" class="instruction" placeholder="Instruction 3" value="down"/>
+        <input type="text" class="instruction" placeholder="Instruction 4" value="left"/>
+        <input type="text" class="instruction" placeholder="Instruction 5" value="up"/>
+        <input type="submit" value="Ready"/>
+    </form>
+</div>
 
 
 <script src="bower_components/howler/howler.js"></script>
