@@ -257,6 +257,10 @@ function moveAtAngle(player, angle) {
     setTimeout(_.partial(clearSpriteMovement, player), time * 1000);
 }
 
+function setPlayerReady() {
+    socket.emit("player ready", localPlayer.data);
+}
+
 function disconnect() {
     socket.emit("player left", playerId);
 }
@@ -314,6 +318,7 @@ function setUpSocketReceivers() {
         console.log('I got my id it is: ' + playerId);
 
         localPlayer = addPlayer({id: playerId});
+        setPlayerReady(localPlayer);
 
         game.camera.follow(localPlayer);
     });

@@ -47,6 +47,13 @@ io.sockets.on('connection', function (socket) {
     console.log('User: connected');
     addUser(socket);
 
+    socket.on('player ready', function(playerData) {
+        // use playerData.startTile.x and playerData.startTile.y to track
+        // where player's start tile is
+
+        // also has playerData.movementQueue of commands, but that's empty here
+    });
+
     socket.on('disconnect', function () {
         console.log('disconnect: ' + socket.id);
         dropUser(socket.id)
@@ -70,4 +77,3 @@ function playerById(id) {
     }
     return false;
 }
-
