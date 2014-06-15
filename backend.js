@@ -72,6 +72,9 @@ io.sockets.on('connection', function (socket) {
            })){
                   console.log('all moves received ')
                   io.emit('all player moves ready', players)
+                  _.each(players, function(player){
+                    player.moves = []
+                  });
            }
 
 

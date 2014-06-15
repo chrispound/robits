@@ -27,9 +27,9 @@ $(function () {
             return $(command).val();
         });
 
-        _.each(instructions, function (instruction) {
-            addInstruction(localPlayer, instruction);
-        });
+//        _.each(instructions, function (instruction) {
+//            addInstruction(localPlayer, instruction);
+//        });
         socket.emit('player moves ready', instructions)
         console.log('emited player moves')
         e.preventDefault();
@@ -336,6 +336,7 @@ function syncPlayerMoves(players){
     console.log('syncing player moves')
     _.each(getPlayers(), function(player) {
         _.each(players, function(serverPlayer){
+        //TODO bug: moves seem to be getting mixed up
         if(player.data.id === serverPlayer.playerId){
                   _.each(serverPlayer.moves, function (instruction) {
                         addInstruction(player, instruction);
