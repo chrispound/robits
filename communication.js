@@ -50,6 +50,18 @@ window.communication = (function(gameData) {
         alert('Game full looking for new room...')
     }
 
+    function playerReachedCheckpoint(playerId){
+         console.log('updating player points')
+         _.each(gameData.getPlayers(), function(player){
+            if(player.data.id === playerId){
+                player.data.checkpoints++;
+                if(player.data.checkpoints >= 2){
+//                    alert('Player: ' + player.data.id + ' won! That is pretty cool.');
+                }
+             }
+         });
+    }
+
     function syncPlayerList(newPlayerList) {
         _.each(gameData.getPlayers(), function removeIfMissing(player) {
             var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
@@ -126,6 +138,8 @@ window.communication = (function(gameData) {
         socket.on('log', logMessage);
 
         socket.on('chat', logChatMessage);
+
+        socket.on('player checkpoint', playerReachedCheckpoint)
     }
 })(gameData);
 

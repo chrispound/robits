@@ -140,7 +140,8 @@ function addPlayer(data) {
         startTile: startTile,
         movementQueue: [],
         id: Math.random(),
-        isTeleporting: false
+        isTeleporting: false,
+        checkpoints: []
     }, data);
 
     resetToStart(player);
@@ -263,13 +264,14 @@ function moveAtAngle(player, angle) {
     setTimeout(_.partial(clearSpriteMovement, player), time * 1000);
 }
 
-function hitCheckpoint(sprite, tile) {
+function hitCheckpoint(player, tile) {
 
-  if (!_.contains(tile.playersTouched, sprite.data.id)) {
+  if (!_.contains(tile.playersTouched, player.data.id)) {
     console.log("player scored a checkpoint");
-    tile.playersTouched.push(sprite.data.id);
+    tile.playersTouched.push(player.data.id);
   }
   //check win?
+  socket.emit("player checkpoint", player.data.id);
 }
 
 function goThroughPortal(sprite, tile) {
