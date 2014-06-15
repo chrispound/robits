@@ -43,11 +43,12 @@ window.gameData = {
         moveFunction.instruction = instruction;
         player.data.movementQueue.push(moveFunction);
     },
-    restartGame: function(player){
-        player.x =0;
-        player.y = 0;
-        resetToStart(player)
-        player.data.movementQueue = [];
+    restartGame: function(players){
+        _.each(players, function(player){
+              clearSpriteMovement(player);
+              resetToStart(player);
+              player.data.movementQueue = [];
+        });
         _.each(gameData.checkpointTiles, function(tile) {
             tile.playersTouched = [];
         });

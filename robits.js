@@ -358,6 +358,7 @@ function hitCheckpoint(sprite, tile) {
     console.log("player scored a checkpoint");
     tile.playersTouched.push(sprite.data.id);
       if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
+          gameData.restartGame(gameData.getPlayers())
           console.log("player touched last checkpoint, send win event!");
           socket.emit("player won", sprite.data.id);
       };
