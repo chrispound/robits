@@ -114,7 +114,10 @@ window.communication = (function(gameData) {
         console.log('Syncing player moves');
         _.each(gameData.getPlayers(), function(player) {
             _.each(serverPlayers, function(serverPlayer){
-                if(player.data.id === serverPlayer.id){
+
+                var localPlayer = (serverPlayer.id === gameData.localPlayer.data.id);
+
+                if(!localPlayer && player.data.id === serverPlayer.id){
                     _.each(serverPlayer.moves, function (instruction) {
                         gameData.addInstruction(player, instruction);
                     });
