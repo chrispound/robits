@@ -1,4 +1,4 @@
-var DEBUG_MODE = true;
+var DEBUG_MODE = false;
 
 var w = window,
     d = document,
@@ -8,15 +8,15 @@ var w = window,
     height = w.innerHeight || e.clientHeight || g.clientHeight;
 
 var game = new Phaser.Game(1280, 1280, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
-var localPlayer, layer, map;
+
+var layer, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
 var playerId = 0;
 //initiate connection to server
 var ignoreArrowKeys,
-    players = [],
-    roundReady;
+    _players = [];
 var socket = io();
 var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
@@ -28,17 +28,13 @@ $(function () {
         });
 
 //        _.each(instructions, function (instruction) {
-//            addInstruction(localPlayer, instruction);
+//            gameData.addInstruction(gameData.localPlayer, instruction);
 //        });
-        socket.emit('player moves ready', instructions)
-        console.log('emited player moves')
+        socket.emit('player moves ready', instructions);
+        console.log('Emitted player moves');
         e.preventDefault();
     });
 });
-
-function addInstruction(player, instruction) {
-    player.data.movementQueue.push(_.partial(moveAtAngle, player, directionToAngle(instruction)));
-}
 
 function directionToAngle(direction) {
     switch (direction) {
@@ -55,10 +51,6 @@ function directionToAngle(direction) {
     }
 }
 
-function getPlayers() {
-    return _.values(players);
-}
-
 function preload() {
     game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tileset', 'assets/tileset.png');
@@ -66,8 +58,9 @@ function preload() {
 }
 
 function create() {
+    gameData.game = game;
+    window.communication.initializeSocket();
 
-    setUpSocketReceivers();
     cursors = game.input.keyboard.createCursorKeys();
     game.stage.backgroundColor = '#787878';
 
@@ -106,7 +99,7 @@ function create() {
         var rightButton = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
 
         function proxyQueueMove(direction) {
-            queueMove(localPlayer, direction)
+            queueMove(gameData.localPlayer, direction)
         }
 
         downButton.onDown.add(_.partial(proxyQueueMove, 'down'), this);
@@ -116,19 +109,9 @@ function create() {
     }
 }
 
-function removePlayer(id) {
-    var player = _.find(getPlayers(), function (player) {
-        return player.data.id === id;
-    });
-
-    delete players[player.data.id];
-
-    player.destroy();
-}
-
 function chooseStartTile() {
     var unusedTile = _.find(startTiles, function (tile) {
-        return !_.some(getPlayers(), function (player) {
+        return !_.some(gameData.getPlayers(), function (player) {
             return player.data.startTile.x === tile.x &&
                 player.data.startTile.y === tile.y;
         });
@@ -160,10 +143,10 @@ function addPlayer(data) {
 
     player.anchor.setTo(0.5, 0.5);
 
-    var color = colorScale(_.size(getPlayers()) / maxPlayers);
+    var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
-    players[player.data.id] = player;
+    gameData.addPlayer(player);
 
     return player;
 }
@@ -180,7 +163,7 @@ var timingOut = false;
 
 function clearTeleportFlags() {
   var BOUNDARY = 65;
-  _.each(getPlayers(), function(player) {
+  _.each(gameData.getPlayers(), function(player) {
     if(!_.some(portalTiles, function(tile) {
       return tile.intersects(player.x - BOUNDARY, player.y - BOUNDARY, player.x + BOUNDARY, player.y + BOUNDARY);
     })) {
@@ -193,35 +176,35 @@ function update() {
     clearTeleportFlags();
     if (firstTime) {
         firstTime = false;
-        roundReady = true
+        gameData.roundReady = true
     }
 
-    if (roundReady) {
+    if (gameData.roundReady) {
         updateRound();
         tryRoundDone();
     } else {
         //planning stage
 
-        /*_.each(getPlayers(), function(player) {
+        /*_.each(gameData.getPlayers(), function(player) {
          addRandomPath(player);
          });
 
-         roundReady = true;*/
+         gameData.roundReady = true;*/
 
-        if (localPlayer && DEBUG_MODE) {
-            roundReady = true;
+        if (gameData.localPlayer && DEBUG_MODE) {
+            gameData.roundReady = true;
         }
     }
 }
 
 function render() {
-    if (localPlayer && DEBUG_MODE) {
-        game.debug.body(localPlayer);
+    if (gameData.localPlayer && DEBUG_MODE) {
+        game.debug.body(gameData.localPlayer);
     }
 }
 
 function tryRoundDone() {
-    var inProgress = _.some(getPlayers(), function (player) {
+    var inProgress = _.some(gameData.getPlayers(), function (player) {
         return player.data.stepInProgress || player.data.movementQueue.length > 0;
     });
 
@@ -232,14 +215,14 @@ function tryRoundDone() {
 }
 
 function updateRound() {
-    _.each(getPlayers(), function (player) {
+    _.each(gameData.getPlayers(), function (player) {
         game.physics.arcade.collide(player, layer);
         tryMovement(player);
     });
 }
 
 function endRound() {
-    roundReady = false;
+    gameData.roundReady = false;
 }
 
 function queueMove(player, direction) {
@@ -272,109 +255,6 @@ function moveAtAngle(player, angle) {
     setTimeout(_.partial(clearSpriteMovement, player), time * 1000);
 }
 
-function getPlayerBroadcastInfo(player) {
-    return {
-        id: localPlayer.data.id,
-        movementQueue: localPlayer.data.movementQueue,
-        startTile: {
-            x: localPlayer.data.startTile.x,
-            y: localPlayer.data.startTile.y
-        }
-    }
-}
-
-function setPlayerReady() {
-    socket.emit("player ready", getPlayerBroadcastInfo(localPlayer));
-}
-
-function disconnect() {
-    socket.emit("player left", playerId);
-}
-
-function playerMoved() {
-    socket.emit("player moved", 0)
-}
-
-function playerDied() {
-    socket.emit("player died", playerId)
-}
-
-function playerConnected(playerId) {
-    addPlayer({id: playerId});
-}
-
-function playerWins(playerId) {
-    alert("Game Over: " + playerId + " wins!");
-}
-
-function syncPlayerList(newPlayerList) {
-    _.each(getPlayers(), function removeIfMissing(player) {
-        var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
-            return newPlayer.playerId === player.data.id;
-        });
-
-        if (playerDisappeared) {
-            removePlayer(player.data.id);
-            console.log("Removing player " + player.data.id)
-        }
-    });
-
-    _.each(newPlayerList, function addIfMissing(newPlayer) {
-        var playerIsNew = !_.some(getPlayers(), function (player) {
-            return player.data.id === newPlayer.playerId;
-        });
-
-        if (playerIsNew) {
-            addPlayer({id: newPlayer.playerId});
-            console.log("Adding player " + newPlayer.playerId)
-        }
-    });
-}
-
-function syncPlayerMoves(players){
-//for each user add their move-set then launch the movement part of the round
-    console.log('syncing player moves')
-    _.each(getPlayers(), function(player) {
-        _.each(players, function(serverPlayer){
-        //TODO bug: moves seem to be getting mixed up
-        if(player.data.id === serverPlayer.playerId){
-                  _.each(serverPlayer.moves, function (instruction) {
-                        addInstruction(player, instruction);
-                    });
-        }
-        });
-        console.log('queue after sync: '+ player.data.movementQueue)
-    });
-    roundReady = true;
-}
-
-function setUpSocketReceivers() {
-    socket.on('player won', playerWins);
-
-    socket.on('players changed', syncPlayerList);
-
-    socket.on('player left', removePlayer);
-
-    socket.on("update", function () {
-        //probably list of all players and current positions.
-    });
-
-    socket.on('receive id', function (playerId) {
-        console.log('I got my id it is: ' + playerId);
-
-        localPlayer = addPlayer({id: playerId});
-        setPlayerReady(localPlayer);
-
-        game.camera.follow(localPlayer);
-    });
-
-    socket.on('player died', playerDied)
-
-    socket.on('all player moves ready', syncPlayerMoves)
-
-
-}
-
 function hitCheckpoint(sprite, tile) {
 
   if (!_.contains(tile.playersTouched, sprite.data.id)) {
@@ -388,9 +268,9 @@ function goThroughPortal(sprite, tile) {
 
   // find a random portal that is not the current portal
   // assign the sprite body x and y to that tile.
-  if(!localPlayer.data.isTeleporting) {
+  if(!gameData.localPlayer.data.isTeleporting) {
 
-    localPlayer.data.isTeleporting = true;
+    gameData.localPlayer.data.isTeleporting = true;
     var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
     var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
     var newPosition = getTileCenter(randomPortal);

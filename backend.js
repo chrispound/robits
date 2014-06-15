@@ -8,31 +8,34 @@ var currentUser = 0;
 
 var Player = function (playerId) {
     var moves;
-    var playerId = playerId;
 
-      return {
-            moves: moves,
-            playerId: playerId
-        }
+    return {
+        moves: moves,
+        playerId: playerId
+    }
 };
 
-var addUser = function (socket) {
+var addPlayer = function (socket) {
     var sessionId = socket.id;
     currentUser = currentUser + 1;
-    players.push(new Player(sessionId));
+    var player = new Player(sessionId);
+    players.push(player);
 
-    console.log("---FOLLOWING PLAYERS CONNECTED----");
+    console.log("--- THE FOLLOWING PLAYERS ARE CONNECTED ----");
 
     for (var i = 0; i < players.length; i++) {
         var existingPlayer = players[i];
-        console.log('player: ' + existingPlayer.playerId)
+        console.log(existingPlayer.playerId)
     }
 
-    setTimeout(function() {
-        console.log('sending player: ' + sessionId + ' their id.');
+    console.log("--------------------------------------------\n");
+
+    setTimeout(function () {
         io.emit('receive id', existingPlayer.playerId);
         emitPlayersChanged();
     }, 1500);
+
+    return player;
 };
 
 var dropUser = function (sessionId) {
@@ -47,10 +50,9 @@ app.use(express.static(__dirname));
 
 
 io.sockets.on('connection', function (socket) {
-    console.log('User: connected');
-    addUser(socket);
+    var player = addPlayer(socket);
 
-    socket.on('player ready', function(playerData) {
+    socket.on('player ready', function (playerData) {
         // use playerData.startTile.x and playerData.startTile.y to track
         // where player's start tile is
 
@@ -59,27 +61,33 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
-        console.log('disconnect: ' + socket.id);
+        console.log('Disconnect: ' + socket.id + '\n');
         dropUser(socket.id)
     });
-    socket.on('player moves ready', function(moves){
-        var updatePlayer = playerById(socket.id)
+
+    socket.on('player moves ready', function (moves) {
+        var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
-        console.log('checking if all moves received')
 
-          if(!_.some(players, function(player) {
-                   return _.size(player.moves) === 0;
-           })){
-                  console.log('all moves received ')
-                  io.emit('all player moves ready', players)
-                  _.each(players, function(player){
-                    player.moves = []
-                  });
-           }
+        console.log("Player " + updatePlayer.playerId + " is ready");
 
+        var allPlayersReady = !_.some(players, function (player) {
+            return _.size(player.moves) === 0;
+        });
+
+        if(allPlayersReady) {
+            console.log('*** All players are ready ***');
+
+            io.emit('all player moves ready', players);
+            _.each(players, clearMoves);
+
+            function clearMoves(player) {
+                player.moves = []
+            }
+        }
 
     });
-    socket.on('player died', function(playerId){
+    socket.on('player died', function (playerId) {
         io.emit('player died', playerId)
     });
 
@@ -90,7 +98,7 @@ function emitPlayersChanged() {
 }
 
 http.listen(3000, function () {
-    console.log('listening on *:3000');
+    console.log('\nlistening on *:3000\n');
 });
 
 function playerById(id) {
