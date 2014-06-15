@@ -21,7 +21,9 @@ window.communication = (function(gameData) {
         localPlayerSetupComplete: function() { return setPlayerSetupComplete(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
-        localPlayerWins: function() { return playerWins(gameData.localPlayer.data.id); }
+        localPlayerWins: function() { 
+            return playerWins(gameData.localPlayer.data.id); 
+        }
     };
 
     function setLocalPlayerId(id) {
@@ -57,6 +59,7 @@ window.communication = (function(gameData) {
     }
 
     function playerWins(id) {
+        gameData.restartGame(gameData.localPlayer)
         alert("Game Over: " + id + " wins!");
     }
 
@@ -70,18 +73,6 @@ window.communication = (function(gameData) {
         console.log(serverGameInfo);
         gameData.assignedStartTiles = serverGameInfo.assignedStartTiles || {};
         serverStateLoadedPromise.resolve();
-    }
-
-    function playerReachedCheckpoint(id){
-         console.log('updating player points');
-         _.each(gameData.getPlayers(), function(player){
-            if(player.data.id === id){
-                player.data.checkpoints++;
-                if(player.data.checkpoints >= 2){
-//                    alert('Player: ' + player.data.id + ' won! That is pretty cool.');
-                }
-             }
-         });
     }
 
     function syncPlayerList(newPlayerList) {
@@ -162,8 +153,6 @@ window.communication = (function(gameData) {
         socket.on('log', logMessage);
 
         socket.on('chat', logChatMessage);
-
-        socket.on('player checkpoint', playerReachedCheckpoint);
 
         socket.on('game info', updateGameData);
     }
