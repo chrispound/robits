@@ -170,6 +170,9 @@ function addPlayer(data) {
 
     player.anchor.setTo(0.5, 0.5);
 
+    var label = game.add.text(0, 0, player.data.id, {/*style object*/});
+    player.addChild(label);
+
     var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
