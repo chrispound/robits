@@ -4,10 +4,15 @@ var w = window,
     d = document,
     e = d.documentElement,
     g = d.getElementsByTagName('body')[0],
-    width = w.innerWidth || e.clientWidth || g.clientWidth,
-    height = w.innerHeight || e.clientHeight || g.clientHeight;
+    pageWidth = w.innerWidth || e.clientWidth || g.clientWidth,
+    pageHeight = w.innerHeight || e.clientHeight || g.clientHeight;
 
-var game = new Phaser.Game(1280, 1280, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var container = $('#robits');
+
+var width = container.width();
+var height = pageHeight - container.offset().top;
+
+var game = new Phaser.Game(1280, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
@@ -65,6 +70,21 @@ function preload() {
     game.load.image('robot', 'assets/robot.png');
 }
 
+// Doesn't work completely right
+function resizeGame() {
+    var width = Math.min(map.widthInPixels, game.width);
+    var height = Math.min(map.heightInPixels, game.height);
+
+    game.width = width;
+    game.height = height;
+    game.stage.bounds.width = width;
+    game.stage.bounds.height = height;
+    game.camera.setSize(width, height);
+    if (game.renderType === Phaser.WEBGL) {
+        game.renderer.resize(width, height);
+    }
+}
+
 function create() {
     gameData.game = game;
     window.communication.initializeSocket();
@@ -83,8 +103,6 @@ function create() {
     layer = map.createLayer('Tile Layer 1');
 
     layer.resizeWorld();
-
-    game.world.setBounds(0, 0, map.width, map.height);
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
