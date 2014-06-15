@@ -103,6 +103,10 @@ io.sockets.on('connection', function (socket) {
         console.log('player hit checkpoint. updating clients')
         io.emit('player checkpoint', playerId)
     });
+    
+    socket.on('player won', function(playerId) {
+       io.emit('player won', playerId); 
+    });
 
 });
 
