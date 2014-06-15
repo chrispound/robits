@@ -32,8 +32,6 @@ $(function () {
         });
         socket.emit('player moves ready', instructions)
         console.log('emited player moves')
-        roundReady = true;
-
         e.preventDefault();
     });
 });
@@ -339,12 +337,16 @@ function syncPlayerMoves(players){
 //for each user add their move-set then launch the movement part of the round
     console.log('syncing player moves')
     _.each(getPlayers(), function(player) {
-        player.data.movementQueue = _.each(players, function(serverPlayer){
+        _.each(players, function(serverPlayer){
         if(player.data.id === serverPlayer.playerId){
-            player.data.movementQueue = serverPlayer.moves;
+                  _.each(serverPlayer.moves, function (instruction) {
+                        addInstruction(player, instruction);
+                    });
         }
         });
+        console.log('queue after sync: '+ player.data.movementQueue)
     });
+    roundReady = true;
 }
 
 function setUpSocketReceivers() {
