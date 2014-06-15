@@ -26,6 +26,12 @@ var socket = io();
 var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
 
+var sound = new Howl({
+    urls: ['assets/soundtrack.mp3'],
+    loop: true
+}).play();
+
+
 $(function () {
     $('#chat').submit(function (e) {
         socket.emit('chat', $('#chat input').val());
