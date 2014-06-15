@@ -7,8 +7,8 @@ var w = window,
     width = w.innerWidth || e.clientWidth || g.clientWidth,
     height = w.innerHeight || e.clientHeight || g.clientHeight;
 
-var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
-var localPlayer, layer, map, startTiles;
+var game = new Phaser.Game(1280, 1280, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var localPlayer, layer, map;
 var cursors;
 var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
@@ -18,7 +18,8 @@ var ignoreArrowKeys,
     players = {},
     roundReady;
 var socket = io();
-var layer, portalLayer;
+var layer;
+var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
 
 $(function () {
@@ -92,8 +93,10 @@ function create() {
     tileWidth = 128;
 
     startTiles = getTilesOfIndex(2);
+    portalTiles = getTilesOfIndex(3);
+    checkpointTiles = getTilesOfIndex(4);
 
-    if (DEBUG_MODE) {
+    if(DEBUG_MODE) {
         var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         var leftButton = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         var upButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -148,14 +151,15 @@ function addPlayer(data) {
     player.data = _.extend({
         startTile: startTile,
         movementQueue: [],
-        id: Math.random()
+        id: Math.random(),
+        isTeleporting: false
     }, data);
 
     resetToStart(player);
     game.physics.arcade.enable(player);
 
     player.body.collideWorldBounds = true;
-    player.body.setSize(128, 128); //TODO set to 128x128 once we have perfect movement
+    player.body.setSize(128, 128);
 
     player.anchor.setTo(0.5, 0.5);
 
@@ -176,7 +180,20 @@ function addRandomPath(player) {
 // These vars are temporary & just for debugging
 var firstTime = true;
 var timingOut = false;
+
+function clearTeleportFlags() {
+  var BOUNDARY = 65;
+  _.each(players, function(player) {
+    if(!_.some(portalTiles, function(tile) {
+      return tile.intersects(player.x - BOUNDARY, player.y - BOUNDARY, player.x + BOUNDARY, player.y + BOUNDARY);
+    })) {
+      player.data.isTeleporting = false;
+    }
+  });
+}
+
 function update() {
+    clearTeleportFlags();
     if (firstTime) {
         firstTime = false;
         roundReady = true
@@ -337,9 +354,23 @@ function setUpSocketReceivers() {
 }
 
 function goThroughPortal(sprite, tile) {
-    console.log("going through portal!");
-    //teleport to other portal
-    return false;
+
+  // find a random portal that is not the current portal
+  // assign the sprite body x and y to that tile.
+  if(!localPlayer.data.isTeleporting) {
+
+    localPlayer.data.isTeleporting = true;
+    var otherPortals = _.reject(portalTiles, function(aTile) {return tile == aTile;});
+    var randomPortal = otherPortals[Math.floor(Math.random() * otherPortals.length)];
+    var newPosition = getTileCenter(randomPortal);
+    console.log("new position: " + newPosition.x + " " + newPosition.y);
+    sprite.body.x = newPosition.x - 64;
+    sprite.body.y = newPosition.y - 64;
+    centerOnTile(sprite);
+
+  }
+
+  return false;
 }
 
 function fallInHole(sprite, tile) {
