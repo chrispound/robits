@@ -103,6 +103,11 @@ window.communication = (function(gameData) {
         log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
     }
 
+    function logChatMessage(message) {
+        var log = $('#chat-log');
+        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+    }
+
     function setUpSocketReceivers() {
         socket.on('player won', playerWins);
 
@@ -116,9 +121,11 @@ window.communication = (function(gameData) {
 
         socket.on('all player moves ready', syncPlayerMoves);
 
-        socket.on('full game', fullGame)
+        socket.on('full game', fullGame);
 
         socket.on('log', logMessage);
+
+        socket.on('chat', logChatMessage);
     }
 })(gameData);
 

@@ -22,10 +22,10 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
 
-            <h4>Your evil plans</h4>
-            <form id="plans">
+            <form id="plans" class="well">
+                <h4>Your evil plans</h4>
                 <input type="text" class="instruction" placeholder="Instruction 1" value="down"/>
                 <input type="text" class="instruction" placeholder="Instruction 2" value="right"/>
                 <input type="text" class="instruction" placeholder="Instruction 3" value="down"/>
@@ -37,9 +37,19 @@
             <div id="robits"></div>
         </div>
 
-        <h4>Server Log</h4>
-        <div id="server-log" class="col-lg-4" style="overflow-y: scroll; height:400px;">
+        <div class="col-lg-3">
+            <div class="row well">
+                <h4>Chat</h4>
+                <div id="chat-log" style="overflow-y: scroll; height:400px;"></div>
+                <form id="chat">
+                    <input class="form-control" type="text"/>
+                </form>
+            </div>
 
+            <div class="row well">
+                <h4>Server Log</h4>
+                <div id="server-log" style="overflow-y: scroll; height:400px;"></div>
+            </div>
         </div>
     </div>
 </div>

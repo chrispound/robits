@@ -22,6 +22,12 @@ var portalTiles, checkpointTiles;
 var colorScale = chroma.scale('RdYlBu');
 
 $(function () {
+    $('#chat').submit(function (e) {
+        socket.emit('chat', $('#chat input').val());
+        $('#chat input').val('');
+        e.preventDefault();
+    });
+
     $('#plans').submit(function (e) {
         var instructions = _.map($(this).find('.instruction'), function (command) {
             return $(command).val();

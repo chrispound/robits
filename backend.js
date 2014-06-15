@@ -54,6 +54,10 @@ io.sockets.on('connection', function (socket) {
           var player = addPlayer(socket);
     }
 
+    socket.on('chat', function(message) {
+        io.emit('chat', socket.id + ": " + message);
+    });
+
     socket.on('player ready', function (playerData) {
         // use playerData.startTile.x and playerData.startTile.y to track
         // where player's start tile is
