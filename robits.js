@@ -1,4 +1,4 @@
-var DEBUG_MODE = false;//true;
+var DEBUG_MODE = true;
 
 var w = window,
     d = document,
@@ -21,13 +21,13 @@ var socket = io();
 var layer, portalLayer;
 var colorScale = chroma.scale('RdYlBu');
 
-$(function(){
-    $('#plans').submit(function(e) {
-        var instructions = _.map($(this).find('.instruction'), function(command) {
+$(function () {
+    $('#plans').submit(function (e) {
+        var instructions = _.map($(this).find('.instruction'), function (command) {
             return $(command).val();
         });
 
-        _.each(instructions, function(instruction) {
+        _.each(instructions, function (instruction) {
             addInstruction(localPlayer, instruction);
         });
 
@@ -42,7 +42,7 @@ function addInstruction(player, instruction) {
 }
 
 function directionToAngle(direction) {
-    switch(direction) {
+    switch (direction) {
         case 'right':
             return 0;
         case 'left':
@@ -91,6 +91,21 @@ function create() {
     widthInTiles = 16;
     heightInTiles = 12;
     tileWidth = 128;
+
+    if(DEBUG_MODE) {
+        var downButton = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+        var leftButton = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+        var upButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+        var rightButton = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+
+        function proxyQueueMove(direction) {
+            queueMove(localPlayer, direction)
+        }
+        downButton.onDown.add(_.partial(proxyQueueMove, 'down'), this);
+        leftButton.onDown.add(_.partial(proxyQueueMove, 'left'), this);
+        upButton.onDown.add(_.partial(proxyQueueMove, 'up'), this);
+        rightButton.onDown.add(_.partial(proxyQueueMove, 'right'), this);
+    }
 }
 
 function removePlayer(id) {
@@ -104,20 +119,26 @@ function removePlayer(id) {
 }
 
 function someCallback(sprite, layer) {
-  console.log("you collided with a portal");
+    console.log("you collided with a portal");
 }
 
 function addPlayer(data) {
-    var player = game.add.sprite(64 + 64 * Math.round(Math.random() * 3), 64 + 64 * Math.round(Math.random() * 3), 'robot');
-    game.physics.arcade.enable(player);
+    var startTile = map.getTile(0, 0);
+
+
+    var player = game.add.sprite(0, 0, 'robot');
 
     player.data = _.extend({
+        startTile: startTile,
         movementQueue: [],
         id: Math.random()
     }, data);
 
+    resetToStart(player);
+    game.physics.arcade.enable(player);
+
     player.body.collideWorldBounds = true;
-    player.body.setSize(100, 100); //TODO set to 128x128 once we have perfect movement
+    player.body.setSize(128, 128); //TODO set to 128x128 once we have perfect movement
 
     player.anchor.setTo(0.5, 0.5);
 
@@ -139,35 +160,25 @@ function addRandomPath(player) {
 var firstTime = true;
 var timingOut = false;
 function update() {
-    if(firstTime) {
+    if (firstTime) {
         firstTime = false;
         roundReady = true
     }
 
-    if(roundReady) {
+    if (roundReady) {
         updateRound();
         tryRoundDone();
     } else {
         //planning stage
 
         /*_.each(getPlayers(), function(player) {
-            addRandomPath(player);
-        });
+         addRandomPath(player);
+         });
 
-        roundReady = true;*/
+         roundReady = true;*/
 
         if (localPlayer && DEBUG_MODE) {
-            queueMovesWithArrowKeys(localPlayer);
-
-            if(!timingOut) {
-                timingOut = true;
-                setTimeout(function() {
-                    timingOut = false;
-                    if(localPlayer.data.movementQueue.length > 0) {
-                        roundReady = true;
-                    }
-                }, 3000);
-            }
+            roundReady = true;
         }
     }
 }
@@ -179,11 +190,11 @@ function render() {
 }
 
 function tryRoundDone() {
-    var inProgress = _.some(getPlayers(), function(player) {
+    var inProgress = _.some(getPlayers(), function (player) {
         return player.data.stepInProgress || player.data.movementQueue.length > 0;
     });
 
-    if(!inProgress) {
+    if (!inProgress) {
         endRound();
         console.log("***** End of round *****")
     }
@@ -200,28 +211,10 @@ function endRound() {
     roundReady = false;
 }
 
-function queueMovesWithArrowKeys(player) {
-    if (!ignoreArrowKeys) {
-        var angle, direction;
-        if (cursors.right.isDown) {
-            direction = 'right';
-        } else if (cursors.left.isDown) {
-            direction = 'left';
-        } else if (cursors.down.isDown) {
-            direction = 'down';
-        } else if (cursors.up.isDown) {
-            direction = 'up';
-        }
-
-        angle = directionToAngle(direction);
-
-        if (!_.isUndefined(angle)) {
-            player.data.movementQueue.push(_.partial(moveAtAngle, player, angle));
-        }
-        ignoreArrowKeys = true;
-        setTimeout(function () {
-            ignoreArrowKeys = false;
-        }, 50);
+function queueMove(player, direction) {
+    if (!_.isUndefined(direction)) {
+        var angle = directionToAngle(direction);
+        player.data.movementQueue.push(_.partial(moveAtAngle, player, angle));
     }
 }
 
@@ -270,22 +263,22 @@ function playerWins(playerId) {
 
 function syncPlayerList(newPlayerList) {
     _.each(getPlayers(), function removeIfMissing(player) {
-        var playerDisappeared = !_.some(newPlayerList, function(newPlayer) {
+        var playerDisappeared = !_.some(newPlayerList, function (newPlayer) {
             return newPlayer.playerId === player.data.id;
         });
 
-        if(playerDisappeared) {
+        if (playerDisappeared) {
             removePlayer(player.data.id);
             console.log("Removing player " + player.data.id)
         }
     });
 
     _.each(newPlayerList, function addIfMissing(newPlayer) {
-        var playerIsNew = !_.some(getPlayers(), function(player) {
+        var playerIsNew = !_.some(getPlayers(), function (player) {
             return player.data.id === newPlayer.playerId;
         });
 
-        if(playerIsNew) {
+        if (playerIsNew) {
             addPlayer({id: newPlayer.playerId});
             console.log("Adding player " + newPlayer.playerId)
         }
@@ -311,22 +304,40 @@ function setUpSocketReceivers() {
 }
 
 function goThroughPortal(sprite, tile) {
-  console.log("going through portal!");
-  //teleport to other portal
-  return false;
+    console.log("going through portal!");
+    //teleport to other portal
+    return false;
 }
 
 function fallInHole(sprite, tile) {
-  console.log("fell in hole!");
-  // player reset
-  sprite.body.x = 0;
-  sprite.body.y = 0;
-  clearSpriteMovement(sprite);
-  return false;
+    console.log("fell in hole!");
+    resetToStart(sprite);
+    clearSpriteMovement(sprite);
+    return false;
+}
+
+function resetToStart(sprite) {
+    var position = getTileCenter(sprite.data.startTile);
+    sprite.x = position.x;
+    sprite.y = position.y
 }
 
 function clearSpriteMovement(sprite) {
-  sprite.body.velocity.x = 0;
-  sprite.body.velocity.y = 0;
-  sprite.data.stepInProgress = false;
+    sprite.body.velocity.x = 0;
+    sprite.body.velocity.y = 0;
+    sprite.data.stepInProgress = false;
+    centerOnTile(sprite);
+}
+
+function centerOnTile(sprite) {
+    var tile = map.getTileWorldXY(sprite.x, sprite.y);
+
+    var tileCenter = getTileCenter(tile);
+
+    sprite.x = tileCenter.x;
+    sprite.y = tileCenter.y;
+}
+
+function getTileCenter(tile) {
+    return {x: tile.worldX + (tile.width / 2), y: tile.worldY + (tile.height / 2)};
 }
