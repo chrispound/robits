@@ -45,7 +45,7 @@ window.communication = (function(gameData) {
     }
 
     function playerWins(playerId) {
-        gameData.restartGame(gameData.localPlayer)
+        gameData.restartGame(gameData.getPlayers());
         alert("Game Over: " + playerId + " wins!");
     }
 
