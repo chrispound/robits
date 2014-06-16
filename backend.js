@@ -148,8 +148,9 @@ function emitGameChanged() {
     io.emit('players changed', players);
 }
 
-http.listen(3000, function () {
-    log('\nlistening on *:3000\n');
+var port = Number(process.env.PORT || 3000);
+http.listen(port, function () {
+    log('\nlistening on *:'+port+'\n');
 });
 
 function playerById(id) {

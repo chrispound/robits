@@ -27,7 +27,7 @@ var colorScale = chroma.scale('RdYlBu');
 window.communication.initializeSocket();
 
 var sound = new Howl({
-    urls: ['assets/soundtrack.mp3'],
+    urls: ['https://cdn.rawgit.com/Atlas-/robits/master/assets/soundtrack.mp3'],
     loop: true
 }).play();
 
