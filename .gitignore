@@ -3,3 +3,4 @@ bower_components/
 *.iml
 Thumbs.db
 node_modules/
+npm-debug.log
