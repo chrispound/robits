@@ -79,8 +79,9 @@ io.sockets.on('connection', function (socket) {
         var player = addPlayer(socket);
     }
 
-    socket.on('chat', function (message) {
-        io.emit('chat', socket.id + ": " + message);
+    socket.on('chat', function (message, room) {
+        log('chat message received in room ' + room);
+        io.sockets.in(room).emit('chat', socket.id + ": " + message);
     });
 
     socket.on('player setup complete', function (playerData) {
@@ -141,6 +142,10 @@ io.sockets.on('connection', function (socket) {
         io.emit('player won', id);
     });
 
+    socket.on('room', function(room) {
+        log('player has joined room ' + room);
+        socket.join(room);
+    });
 });
 
 function emitGameChanged() {

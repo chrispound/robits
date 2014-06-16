@@ -20,7 +20,7 @@ var widthInTiles, heightInTiles, tileWidth;
 var maxPlayers = 8;
 
 var _players = [];
-var socket = io();
+var socket = io.connect();
 var portalTiles, startTiles;
 var colorScale = chroma.scale('RdYlBu');
 
@@ -31,9 +31,10 @@ var sound = new Howl({
     loop: true
 }).play();
 
+
 $(function () {
     $('#chat').submit(function (e) {
-        socket.emit('chat', $('#chat input').val());
+        socket.emit('chat', $('#chat input').val(), 'abc123');
         $('#chat input').val('');
         e.preventDefault();
     });

@@ -158,6 +158,13 @@ window.communication = (function(gameData) {
         socket.on('chat', logChatMessage);
 
         socket.on('game info', updateGameData);
+
+        socket.on('connect', function() {
+            var room = 'abc123';
+            socket.emit('room', room);
+            console.log('joined room ' + room)
+        });
+
     }
 })(gameData);
 
