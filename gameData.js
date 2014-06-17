@@ -27,6 +27,7 @@ window.gameData = {
     game: null,
     localPlayer: null,
     roundReady: false,
+    roomId: null,
     checkpointTiles: [],
     getPlayers: function getPlayers() {
         return _.values(_players);

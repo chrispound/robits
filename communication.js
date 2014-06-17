@@ -137,6 +137,11 @@ window.communication = (function(gameData) {
         var log = $('#chat-log');
         log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
     }
+    
+    function setRoomId(roomId){
+        console.log('client is joinning room: ' + roomId);
+        gameData.roomId = roomId;
+    }
 
     function setUpSocketReceivers() {
         socket.on('player won', playerWins);
@@ -158,6 +163,8 @@ window.communication = (function(gameData) {
         socket.on('chat', logChatMessage);
 
         socket.on('game info', updateGameData);
+        
+        socket.on('set room', setRoomId);
     }
 })(gameData);
 
