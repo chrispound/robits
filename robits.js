@@ -33,6 +33,7 @@ var sound = new Howl({
     loop: true,
     volume: 0.5
 });
+var MOVES_PER_TURN = 5;
 
 $(function () {
     $('#chat').submit(function (e) {
@@ -50,12 +51,15 @@ $(function () {
         var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
             return $(command).html();
         });
-
-        _.each(instructions, function (instruction) {
+        if(instructions.length != MOVES_PER_TURN) {
+          alert('Must select 5 evil moves!');
+        } else {
+          _.each(instructions, function (instruction) {
             gameData.addInstruction(gameData.localPlayer, instruction);
-        });
+          });
 
-        communication.localPlayerReady();
+          communication.localPlayerReady();
+        }
 
         e.preventDefault();
     });
@@ -83,7 +87,6 @@ $(function () {
 
 function displayPossibleMoves() {
     var NUM_MOVES_TO_GENERATE = 10;
-    var MAX_NUM_MOVES = 5;
 
     var possibleMovesDiv = $('#possible-moves').empty();
     var chosenMovesDiv = $('#chosen-moves').empty();
@@ -102,7 +105,7 @@ function displayPossibleMoves() {
     $(".amove").click(function (e) {
       var $this = $(this);
       var id = this.getAttribute('id');
-      if(chosenMovesDiv.children().length == MAX_NUM_MOVES) {
+      if(chosenMovesDiv.children().length == MOVES_PER_TURN) {
         // cannot add another move but can remove moves
         if($this.hasClass('chosen')) {
           $this.removeClass('chosen');
