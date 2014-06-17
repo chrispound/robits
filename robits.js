@@ -12,7 +12,7 @@ var container = $('#robits');
 var width = container.width();
 var height = pageHeight - container.offset().top;
 
-var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(Math.min(width, 1280), Math.min(height, 1280), Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
