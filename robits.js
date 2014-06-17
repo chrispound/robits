@@ -1,4 +1,4 @@
-var DEBUG_MODE = false;//true;
+var DEBUG_MODE = true;
 
 var w = window,
     d = document,
@@ -12,7 +12,7 @@ var container = $('#robits');
 var width = container.width();
 var height = pageHeight - container.offset().top;
 
-var game = new Phaser.Game(1024, 835, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(width, height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
@@ -39,7 +39,12 @@ $(function () {
         e.preventDefault();
     });
 
+    if(DEBUG_MODE) {
+      $('#possible-moves').hide();
+    }
+
     $('#submit-moves').click(function(e) {
+
         var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
             return $(command).html();
         });
