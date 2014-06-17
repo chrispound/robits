@@ -18,19 +18,11 @@ var Player = function (id) {
 };
 
 var addPlayer = function (socket) {
-    var sessionId = socket.id;
-    var player = new Player(sessionId);
+    var player = new Player(socket.id);
+
     players.push(player);
 
-    log("Connected Players:");
-
-    for (var i = 0; i < players.length; i++) {
-        var existingPlayer = players[i];
-        log(existingPlayer.getName())
-    }
-    log("\n");
-
-    socket.emit('assign id', existingPlayer.id);
+    socket.emit('assign id', player.id);
 
     emitGameChanged();
 
@@ -50,6 +42,10 @@ function updatePlayer(clientPlayerData) {
     if (!player) {
         player = new Player(clientPlayerData.id);
     }
+
+  if(player.getName() != clientPlayerData.name && !_.isUndefined(clientPlayerData.name)) {
+    log(player.id + " is now known as " + clientPlayerData.name);
+  }
 
     _.extend(player, {
         name: clientPlayerData.name,
@@ -72,7 +68,8 @@ function buildGameInfo() {
 app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
-    console.log('New user connected');
+
+    log('New user connected: ' + socket.id);
 
     socket.emit('game info', buildGameInfo());
 

@@ -59,7 +59,7 @@ $(function () {
         gameData.localPlayer.data.name = $('#config input').val();
 
         localPlayerConfiguration.resolve();
-        $('#config').hide();
+        $('#config-container').slideUp();
         e.preventDefault();
     });
 });
