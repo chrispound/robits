@@ -44,7 +44,7 @@ function updatePlayer(clientPlayerData) {
     }
 
   if(player.getName() != clientPlayerData.name && !_.isUndefined(clientPlayerData.name)) {
-    log(player.id + " is now known as " + clientPlayerData.name);
+    log(player.getName() + " is now known as " + clientPlayerData.name);
   }
 
     _.extend(player, {

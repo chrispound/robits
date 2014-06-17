@@ -183,6 +183,7 @@ function create() {
     var localPlayerSetup = $.Deferred();
 
     gameData.serverSetup.then(function() {
+        $('#player-name').val(gameData.localPlayerId);
         gameData.localPlayer = addPlayer({id: gameData.localPlayerId});
         gameData.game.camera.follow(gameData.localPlayer);
 

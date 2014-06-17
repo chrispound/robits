@@ -28,6 +28,11 @@ window.gameData = {
     localPlayer: null,
     roundReady: false,
     checkpointTiles: [],
+    getPlayer: function getPlayers(id) {
+      return _.find(gameData.getPlayers(), function(player) {
+        return player.data.id === id;
+      });
+    },
     getPlayers: function getPlayers() {
         return _.values(_players);
     },
@@ -39,11 +44,17 @@ window.gameData = {
         player.destroy();
     },
     updatePlayerLabel: function(player, text) {
-        var newLabel = text || player.data.name;
+        var newLabel = text || player.data.name || player.data.id;
+
+        if(newLabel.length > 10) {
+          newLabel = newLabel.substr(0, 4) + '...';
+        }
+
         label = player.children.length && player.getChildAt(0);
+
         if(label) {
             label.text = newLabel;
-        } else {
+        } else if(!_.isUndefined(newLabel)) {
             var label = game.add.text(-21, 30, newLabel, { "font-size": '12px'});
             player.addChild(label);
         }

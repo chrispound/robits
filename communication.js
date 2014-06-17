@@ -61,8 +61,10 @@ window.communication = (function(gameData) {
     }
 
     function playerWins(id) {
+        var player = gameData.getPlayer(id);
+
         gameData.restartGame(gameData.getPlayers());
-        alert("Game Over: " + id + " wins!");
+        alert("Game Over: " + player.name || player.id + " wins!");
     }
 
     function fullGame(){
