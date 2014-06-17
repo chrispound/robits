@@ -103,6 +103,10 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+    socket.on('request update', function() {
+        emitGameChanged(socket);
+    });
+
     socket.on('player updated', function (playerData) {
         updatePlayer(playerData);
         emitGameChanged(socket);

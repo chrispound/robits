@@ -395,20 +395,25 @@ function moveAtAngle(player, angle) {
 }
 
 function hitCheckpoint(sprite, tile) {
+    if(!_.contains(tile.playersTouched, sprite.data.id)) {
 
-    // only emit a player checkpoint event if it is the local player
-    // and it is not in the tiles array of players touched
-  if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
-    console.log("player scored a checkpoint");
-    tile.playersTouched.push(sprite.data.id);
-      if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
-          gameData.restartGame(gameData.getPlayers())
-          console.log("player touched last checkpoint, send win event!");
-          communication.localPlayerWins();
-      };
+        console.log("Player " + sprite.data.id + " scored a checkpoint");
+        tile.playersTouched.push(sprite.data.id);
+
+        var allCheckpointsHit = gameData.getCheckpointsTouched(sprite).length === gameData.checkpointTiles.length;
+
+        if(allCheckpointsHit) {
+            if(sprite.data.id === gameData.localPlayer.data.id) {
+                communication.localPlayerWins();
+                console.log("Player touched last checkpoint, send win event!");
+            }
+        }
+
+        communication.requestUpdate();
+
       // useful later if we want to update each client with the players checkpoint data
-//    socket.emit("player checkpoint", sprite.data.id);
-  }
+        // socket.emit("player checkpoint", sprite.data.id);
+    }
 }
 
 function goThroughPortal(sprite, tile) {
