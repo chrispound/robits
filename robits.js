@@ -26,11 +26,11 @@ var colorScale = chroma.scale('RdYlBu');
 
 window.communication.initializeSocket();
 
-/*var sound = new Howl({
+var sound = new Howl({
     urls: ['assets/soundtrack.mp3'],
     loop: true,
     volume: 0.5
-}).play();*/
+}).play();
 
 var localPlayerConfiguration = $.Deferred();
 
