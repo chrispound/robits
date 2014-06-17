@@ -80,7 +80,20 @@ io.sockets.on('connection', function (socket) {
     }
 
     socket.on('chat', function (message) {
-        io.emit('chat', playerById(socket.id).getName() + "> " + message);
+        var commandArr = message.match(/^#(\S+)\s*(.*)/);
+
+        var command = (commandArr && commandArr.length > 0) ? commandArr[1] : undefined;
+        var commandArgs = (commandArr && commandArr.length > 1) ? commandArr[2].split(/s+/) : [];
+        var useCommand = false;
+
+        if(!_.isUndefined(command)) {
+            useCommand = handleCommand(socket, command, commandArgs);
+        }
+
+        if(!useCommand) {
+            console.log(playerById(socket.id));
+            io.emit('chat', playerById(socket.id).getName() + "> " + message);
+        }
     });
 
     socket.on('player updated', function (playerData) {
@@ -98,9 +111,11 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         var player = playerById(socket.id);
-        log('Disconnect: ' + player.getName() + '\n');
-        if (player) {
-            dropUser(socket.id)
+        if(player) {
+            log('Disconnect: ' + player.getName() + '\n');
+            if (player) {
+                dropUser(socket.id)
+            }
         }
     });
 
@@ -142,6 +157,27 @@ io.sockets.on('connection', function (socket) {
     });
 
 });
+
+function handleCommand(socket, command, args) {
+    var handled = false;
+
+    switch(command) {
+        case 'kick':
+            _.each(args, function(playerToKick) {
+                var kickPlayer = _.find(players, function(player) {
+                    return player.getName() === playerToKick;
+                });
+                if(kickPlayer) {
+                    io.sockets.connected[kickPlayer.id].disconnect();
+                    dropUser(kickPlayer.id);
+                }
+            });
+            return true;
+            break;
+    }
+
+    return handled;
+}
 
 function emitGameChanged() {
     io.emit('game info', buildGameInfo());
