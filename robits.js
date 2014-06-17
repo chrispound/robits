@@ -27,6 +27,7 @@ var colorScale = chroma.scale('RdYlBu');
 window.communication.initializeSocket();
 
 var sound = new Howl({
+    buffer: true,
     urls: ['assets/soundtrack.mp3'],
     loop: true,
     volume: 0.5
@@ -104,7 +105,7 @@ function displayPossibleMoves() {
 
     /**
      * Generate 10 possible moves from the move array
-     * Display them in the browser to the user
+     * Display them in the browser to the player
      */
     function generateNewMoves() {
         var newMoves = [];
@@ -385,7 +386,7 @@ function hitCheckpoint(sprite, tile) {
       if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
           gameData.restartGame(gameData.getPlayers())
           console.log("player touched last checkpoint, send win event!");
-          socket.emit("player won", sprite.data.id);
+          communication.localPlayerWins();
       };
       // useful later if we want to update each client with the players checkpoint data
 //    socket.emit("player checkpoint", sprite.data.id);

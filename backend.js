@@ -69,7 +69,7 @@ app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
 
-    log('New user connected: ' + socket.id);
+    log('New player connected: ' + socket.id);
 
     socket.emit('game info', buildGameInfo());
 

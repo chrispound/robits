@@ -23,7 +23,7 @@ window.communication = (function(gameData) {
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
         localPlayerWins: function() { 
-            return playerWins(gameData.localPlayer.data.id); 
+            return playerWins(gameData.localPlayer);
         }
     };
 
@@ -60,11 +60,9 @@ window.communication = (function(gameData) {
         socket.emit("player died", player.data.id)
     }
 
-    function playerWins(id) {
-        var player = gameData.getPlayer(id);
-
+    function playerWins(player) {
         gameData.restartGame(gameData.getPlayers());
-        alert("Game Over: " + player.name || player.id + " wins!");
+        alert("Game Over: " + player.data.name || player.data.id + " wins!");
     }
 
     function fullGame(){
@@ -119,6 +117,8 @@ window.communication = (function(gameData) {
 
                 updatePlayer(newPlayer);
             });
+
+            gameData.redrawPlayerInfo();
         });
     }
 
@@ -131,7 +131,7 @@ window.communication = (function(gameData) {
     }
 
     function syncPlayerMoves(serverPlayers){
-    //for each user add their move-set then launch the movement part of the round
+    //for each player add their move-set then launch the movement part of the round
         console.log('Syncing player moves');
         _.each(gameData.getPlayers(), function(player) {
             _.each(serverPlayers, function(serverPlayer){

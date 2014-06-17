@@ -73,5 +73,22 @@ window.gameData = {
         _.each(gameData.checkpointTiles, function(tile) {
             tile.playersTouched = [];
         });
+    },
+    redrawPlayerInfo: function() {
+        $('#player-info').empty();
+        _.each(gameData.getPlayers(), function(player) {
+            var playerInfo = $('<li/>');
+
+            var checkpointsHit = getCheckpointsTouched(player);
+
+            playerInfo.html((player.data.name || player.data.id) + ': ' + ((checkpointsHit && checkpointsHit.length) || 0 + '/' + gameData.checkpointTiles.length));
+            $('#player-info').append(playerInfo);
+        });
     }
 };
+
+function getCheckpointsTouched(player) {
+    _.filter(gameData.checkpointTiles, function(tile) {
+        return _.contains(tile.playersTouched, player.data.id)
+    });
+}
