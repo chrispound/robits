@@ -27,11 +27,12 @@ var colorScale = chroma.scale('RdYlBu');
 window.communication.initializeSocket();
 
 var sound = new Howl({
+    autoplay: false,
     buffer: true,
     urls: ['assets/soundtrack.mp3'],
     loop: true,
     volume: 0.5
-}).play();
+});
 
 $(function () {
     $('#chat').submit(function (e) {
@@ -81,12 +82,17 @@ $(function () {
 
 
 function displayPossibleMoves() {
+    var NUM_MOVES_TO_GENERATE = 10;
+    var MAX_NUM_MOVES = 5;
 
     var possibleMovesDiv = $('#possible-moves').empty();
     var chosenMovesDiv = $('#chosen-moves').empty();
+
+    var imgId = 0;
     _.each(generateNewMoves(), function(move) {
-        possibleMovesDiv.append(
-            "<img data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
+      imgId++;
+      possibleMovesDiv.append(
+            "<img id='move"+ imgId +"' data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
         );
     });
 
@@ -94,13 +100,24 @@ function displayPossibleMoves() {
      * Set the callback for clicking on a move
      */
     $(".amove").click(function (e) {
-        chosenMovesDiv.append('<li class="instruction">' + this.dataset.move+ '</li>');
-        this.remove();
-
-        // once 5 moves have been selected, empty the move div
-        if(possibleMovesDiv.children().length <= 5) {
-            possibleMovesDiv.empty();
+      var $this = $(this);
+      var id = this.getAttribute('id');
+      if(chosenMovesDiv.children().length == MAX_NUM_MOVES) {
+        // cannot add another move but can remove moves
+        if($this.hasClass('chosen')) {
+          $this.removeClass('chosen');
+          $('.instruction[id='+id+']').remove();
         }
+      } else {
+        // can still add and delete
+        if($this.hasClass('chosen')) {
+          $this.removeClass('chosen');
+          $('.instruction[id='+id+']').remove();
+        } else {
+          $this.addClass('chosen');
+          chosenMovesDiv.append('<li class="instruction" id="' + id + '">' + this.dataset.move + '</li>');
+        }
+      }
     });
 
     /**
@@ -109,12 +126,10 @@ function displayPossibleMoves() {
      */
     function generateNewMoves() {
         var newMoves = [];
-        for(i = 0; i < 10; i++) {
-            newMoves.push(_.sample(['left', 'right', 'up', 'down']));
-        }
+        _.times(NUM_MOVES_TO_GENERATE, function() {newMoves.push(_.sample(['left', 'right', 'up', 'down']))});
         return newMoves;
     }
-};
+}
 
 
 
