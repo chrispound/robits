@@ -38,18 +38,18 @@ $(function () {
         $('#chat input').val('');
         e.preventDefault();
     });
-    
+
     $('#submit-moves').click(function(e) {
         var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
             return $(command).html();
         });
-    
+
         _.each(instructions, function (instruction) {
             gameData.addInstruction(gameData.localPlayer, instruction);
         });
 
         communication.localPlayerReady();
-        
+
         e.preventDefault();
     });
 
@@ -60,11 +60,22 @@ $(function () {
 
         e.preventDefault();
     });
+
+    $('#audio').change(function(e) {
+        if($(this).is(':checked')) {
+          sound.play();
+          sound.fade(0, 0.5, 1000);
+        } else {
+          sound.fade(0.5, 0, 1000, function() {
+            sound.pause();
+          });
+        }
+    });
 });
 
 
 function displayPossibleMoves() {
-    
+
     var possibleMovesDiv = $('#possible-moves').empty();
     var chosenMovesDiv = $('#chosen-moves').empty();
     _.each(generateNewMoves(), function(move) {
@@ -72,20 +83,20 @@ function displayPossibleMoves() {
             "<img data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
         );
     });
-       
+
     /**
      * Set the callback for clicking on a move
      */
     $(".amove").click(function (e) {
         chosenMovesDiv.append('<li class="instruction">' + this.dataset.move+ '</li>');
         this.remove();
-        
+
         // once 5 moves have been selected, empty the move div
         if(possibleMovesDiv.children().length <= 5) {
             possibleMovesDiv.empty();
         }
     });
-    
+
     /**
      * Generate 10 possible moves from the move array
      * Display them in the browser to the user
@@ -360,7 +371,7 @@ function moveAtAngle(player, angle) {
 
 function hitCheckpoint(sprite, tile) {
 
-    // only emit a player checkpoint event if it is the local player 
+    // only emit a player checkpoint event if it is the local player
     // and it is not in the tiles array of players touched
   if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
     console.log("player scored a checkpoint");
