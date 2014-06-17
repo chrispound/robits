@@ -4,6 +4,8 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var players = [];
+var room1 = 'room1', room2 = 'room2';
+var test = true;
 
 var Player = function (id) {
     var moves;
@@ -63,6 +65,8 @@ function buildGameInfo() {
             _.map(players, function (player) {
                 return player.startTile;
             }))
+
+//        room: 'test'
     };
 }
 
@@ -70,17 +74,31 @@ app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
     console.log('User: connected');
-
-    socket.emit('game info', buildGameInfo());
+    //connect to current room
+//    console.log(socket.room);
+//    console.log(io.sockets.adapter.rooms[socket.room]);
+//    if(test){
+//        test = false;
+//        socket.room = room1
+//        socket.join(socket.room);
+//        console.log('user connected to room: ' + socket.room);
+//        socket.emit('game info', buildGameInfo());
+//    }
+//    else{
+//         socket.room = room2
+//         socket.join(socket.room);
+//         console.log('user connected to room: ' + socket.room);
+//         socket.emit('game info', buildGameInfo());
+//    }
 
     if (players.length === 4) {
-        tooManyPlayersInGame(socket.id);
     } else {
         var player = addPlayer(socket);
     }
 
     socket.on('chat', function (message) {
         io.emit('chat', socket.id + ": " + message);
+         console.log("in chat the room is: " +socket.room);
     });
 
     socket.on('player setup complete', function (playerData) {
