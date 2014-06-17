@@ -34,6 +34,7 @@ window.communication = (function(gameData) {
     function getPlayerBroadcastInfo(player) {
         return {
             id: player.data.id,
+            name: player.data.name,
             movementQueue: _.map(player.data.movementQueue, function(moveFunction) { return moveFunction.instruction; }),
             startTile: {
                 x: player.data.startTile.x,
@@ -75,6 +76,21 @@ window.communication = (function(gameData) {
         serverStateLoadedPromise.resolve();
     }
 
+    function updatePlayer(serverPlayerData, clientPlayer) {
+        if(!clientPlayer) {
+            clientPlayer = _.find(gameData.getPlayers(), function(player) {
+                return player.data.id === serverPlayerData.id;
+            });
+        }
+
+        _.extend(clientPlayer.data, {
+            name: serverPlayerData.name
+            /* TODO add more as needed */
+        });
+
+        gameData.updatePlayerLabel(clientPlayer);
+    }
+
     function syncPlayerList(newPlayerList) {
         gameData.gameSetup.then(function(){
             _.each(gameData.getPlayers(), function removeIfMissing(player) {
@@ -97,6 +113,8 @@ window.communication = (function(gameData) {
                     addPlayer({id: newPlayer.id});
                     console.log("Adding player " + newPlayer.id)
                 }
+
+                updatePlayer(newPlayer);
             });
         });
     }

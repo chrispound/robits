@@ -38,6 +38,16 @@ window.gameData = {
         delete _players[player.data.id];
         player.destroy();
     },
+    updatePlayerLabel: function(player, text) {
+        var newLabel = text || player.data.name;
+        label = player.children.length && player.getChildAt(0);
+        if(label) {
+            label.text = newLabel;
+        } else {
+            var label = game.add.text(-21, 30, newLabel, { "font-size": '12px'});
+            player.addChild(label);
+        }
+    },
     addInstruction: function (player, instruction) {
         var moveFunction = _.partial(moveAtAngle, player, directionToAngle(instruction));
         moveFunction.instruction = instruction;

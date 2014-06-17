@@ -26,10 +26,13 @@ var colorScale = chroma.scale('RdYlBu');
 
 window.communication.initializeSocket();
 
-var sound = new Howl({
-    urls: ['https://cdn.rawgit.com/Atlas-/robits/master/assets/soundtrack.mp3'],
-    loop: true
-}).play();
+/*var sound = new Howl({
+    urls: ['assets/soundtrack.mp3'],
+    loop: true,
+    volume: 0.5
+}).play();*/
+
+var localPlayerConfiguration = $.Deferred();
 
 $(function () {
     $('#chat').submit(function (e) {
@@ -49,6 +52,14 @@ $(function () {
 
         communication.localPlayerReady();
         
+        e.preventDefault();
+    });
+
+    $('#config').submit(function(e) {
+        gameData.localPlayer.data.name = $('#config input').val();
+
+        localPlayerConfiguration.resolve();
+        $('#config').hide();
         e.preventDefault();
     });
 });
@@ -161,12 +172,16 @@ function create() {
     });
 
     var localPlayerSetup = $.Deferred();
+
     gameData.serverSetup.then(function() {
         gameData.localPlayer = addPlayer({id: gameData.localPlayerId});
         gameData.game.camera.follow(gameData.localPlayer);
 
-        communication.localPlayerSetupComplete();
         localPlayerSetup.resolve();
+    });
+
+    $.when(localPlayerConfiguration, localPlayerSetup).then(function(){
+        communication.localPlayerSetupComplete();
     });
 
     if(DEBUG_MODE) {
@@ -231,11 +246,6 @@ function addPlayer(overwriteData) {
     player.body.setSize(128, 128);
 
     player.anchor.setTo(0.5, 0.5);
-
-    //if(DEBUG_MODE) {
-        var label = game.add.text(-61, 30, player.data.id, { font: '8px'});
-        player.addChild(label);
-    //}
 
     var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);

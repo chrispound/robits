@@ -10,7 +10,10 @@ var Player = function (id) {
 
     return {
         moves: moves,
-        id: id
+        id: id,
+        getName: function () {
+            return this.name || this.id;
+        }
     }
 };
 
@@ -19,14 +22,13 @@ var addPlayer = function (socket) {
     var player = new Player(sessionId);
     players.push(player);
 
-    log("--- THE FOLLOWING PLAYERS ARE CONNECTED ----");
+    log("Connected Players:");
 
     for (var i = 0; i < players.length; i++) {
         var existingPlayer = players[i];
-        log(existingPlayer.id)
+        log(existingPlayer.getName())
     }
-
-    log("--------------------------------------------\n");
+    log("\n");
 
     socket.emit('assign id', existingPlayer.id);
 
@@ -45,11 +47,12 @@ var dropUser = function (sessionId) {
 function updatePlayer(clientPlayerData) {
     var player = _.findWhere(players, {id: clientPlayerData.id});
 
-    if(!player) {
+    if (!player) {
         player = new Player(clientPlayerData.id);
     }
 
     _.extend(player, {
+        name: clientPlayerData.name,
         startTile: clientPlayerData.startTile,
         moves: clientPlayerData.movementQueue
     });
@@ -69,7 +72,7 @@ function buildGameInfo() {
 app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
-    console.log('User: connected');
+    console.log('New user connected');
 
     socket.emit('game info', buildGameInfo());
 
@@ -80,11 +83,10 @@ io.sockets.on('connection', function (socket) {
     }
 
     socket.on('chat', function (message) {
-        io.emit('chat', socket.id + ": " + message);
+        io.emit('chat', playerById(socket.id).getName() + ": " + message);
     });
 
     socket.on('player setup complete', function (playerData) {
-        console.log('here', playerData);
         updatePlayer(playerData);
         emitGameChanged();
     });
@@ -98,8 +100,9 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
-        log('Disconnect: ' + socket.id + '\n');
-        if (playerById(socket.id)) {
+        var player = playerById(socket.id);
+        log('Disconnect: ' + player.getName() + '\n');
+        if (player) {
             dropUser(socket.id)
         }
     });
@@ -109,7 +112,7 @@ io.sockets.on('connection', function (socket) {
         var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
 
-        log("Player " + updatePlayer.id + " is ready");
+        log("Player " + updatePlayer.getName() + " is ready");
 
         var allPlayersReady = !_.some(players, function (player) {
             return _.size(player.moves) === 0;
@@ -150,12 +153,11 @@ function emitGameChanged() {
 
 var port = Number(process.env.PORT || 3000);
 http.listen(port, function () {
-    log('\nlistening on *:'+port+'\n');
+    log('\nlistening on *:' + port + '\n');
 });
 
 function playerById(id) {
-    var i;
-    for (i = 0; i < players.length; i++) {
+    for (var i = 0; i < players.length; i++) {
         if (players[i].id === id)
             return players[i];
     }
