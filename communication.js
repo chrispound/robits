@@ -18,11 +18,12 @@ window.communication = (function(gameData) {
     return {
         initializeSocket: setUpSocketReceivers,
         localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
-        localPlayerSetupComplete: function() { return setPlayerSetupComplete(gameData.localPlayer); },
+        localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
+        localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
         localPlayerWins: function() { 
-            return playerWins(gameData.localPlayer.data.id); 
+            return playerWins(gameData.localPlayer);
         }
     };
 
@@ -34,6 +35,7 @@ window.communication = (function(gameData) {
     function getPlayerBroadcastInfo(player) {
         return {
             id: player.data.id,
+            name: player.data.name,
             movementQueue: _.map(player.data.movementQueue, function(moveFunction) { return moveFunction.instruction; }),
             startTile: {
                 x: player.data.startTile.x,
@@ -42,8 +44,8 @@ window.communication = (function(gameData) {
         }
     }
 
-    function setPlayerSetupComplete(player) {
-        socket.emit("player setup complete", getPlayerBroadcastInfo(player));
+    function setPlayerUpdated(player) {
+        socket.emit("player updated", getPlayerBroadcastInfo(player));
     }
 
     function setPlayerRoundReady(player) {
@@ -58,9 +60,9 @@ window.communication = (function(gameData) {
         socket.emit("player died", player.data.id)
     }
 
-    function playerWins(id) {
+    function playerWins(player) {
         gameData.restartGame(gameData.getPlayers());
-        alert("Game Over: " + id + " wins!");
+        alert("Game Over: " + player.data.name || player.data.id + " wins!");
     }
 
     function fullGame(){
@@ -68,11 +70,23 @@ window.communication = (function(gameData) {
     }
 
     function updateGameData(serverGameInfo) {
-        console.log(serverGameInfo);
-
-        console.log(serverGameInfo);
         gameData.assignedStartTiles = serverGameInfo.assignedStartTiles || {};
         serverStateLoadedPromise.resolve();
+    }
+
+    function updatePlayer(serverPlayerData, clientPlayer) {
+        if(!clientPlayer) {
+            clientPlayer = _.find(gameData.getPlayers(), function(player) {
+                return player.data.id === serverPlayerData.id;
+            });
+        }
+
+        _.extend(clientPlayer.data, {
+            name: serverPlayerData.name
+            /* TODO add more as needed */
+        });
+
+        gameData.updatePlayerLabel(clientPlayer);
     }
 
     function syncPlayerList(newPlayerList) {
@@ -97,7 +111,11 @@ window.communication = (function(gameData) {
                     addPlayer({id: newPlayer.id});
                     console.log("Adding player " + newPlayer.id)
                 }
+
+                updatePlayer(newPlayer);
             });
+
+            gameData.redrawPlayerInfo();
         });
     }
 
@@ -110,7 +128,7 @@ window.communication = (function(gameData) {
     }
 
     function syncPlayerMoves(serverPlayers){
-    //for each user add their move-set then launch the movement part of the round
+    //for each player add their move-set then launch the movement part of the round
         console.log('Syncing player moves');
         _.each(gameData.getPlayers(), function(player) {
             _.each(serverPlayers, function(serverPlayer){
@@ -129,13 +147,18 @@ window.communication = (function(gameData) {
     }
 
     function logMessage(message) {
-        var log = $('#server-log');
-        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+        logChatMessage('server> ' + message);
     }
 
     function logChatMessage(message) {
         var log = $('#chat-log');
-        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+        var escapedMessage = $('<div/>').text(message).html();
+        log.html(log.html() + escapedMessage + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+    }
+
+    function alertKicked(message) {
+        logMessage(message);
+        alert(message);
     }
     
     function setRoomId(roomId){
@@ -165,6 +188,9 @@ window.communication = (function(gameData) {
         socket.on('game info', updateGameData);
         
         socket.on('set room', setRoomId);
+
+        socket.on('kicked', alertKicked);
+
     }
 })(gameData);
 

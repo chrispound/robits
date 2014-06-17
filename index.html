@@ -19,6 +19,16 @@
     <script src="gameData.js"></script>
     <script src="communication.js"></script>
     <script src="robits.js" defer></script>
+
+    <style>
+        .amove {
+            margin: 0 1px 0 1px;
+        }
+        .chosen {
+            opacity: .5;
+            background-color: green;
+        }
+    </style>
 </head>
 <body cz-shortcut-listen="true">
 
@@ -26,43 +36,64 @@
     <div class="row">
         <div class="col-lg-9">
             <div class="well">
-                <p>Possible Moves</p>
-                <div id="possible-moves">
-                
+                <h1>Your Evil Plan</h1>
+                <div class="row">
+                    <div class="col-lg-10">
+                        <p>Possible Moves</p>
+                        <div id="possible-moves"></div>
+                    </div>
+                    <div class="col-lg-2">
+                        <button id="submit-moves" class="btn">Execute</button>
+                        <ol id="chosen-moves"></ol>
+                    </div>
                 </div>
             </div>
-            
-            <div class="col-lg-9" id="robits"></div>
-            
-            <div class="col-lg-3" id="directions">
-               <h1>How to Robits</h1>
+
+            <div id="robits"></div>
+        </div>
+
+        <div class="col-lg-3">
+
+            <div id="directions" class="row well">
+                <h1>How to Robits</h1>
                 <ol>
                     <li><strong>Wait for your enemies to join.</strong></li>
                     <li><strong>Select 5 out of 10 evil moves.</strong></li>
                     <li><strong>Try to get to the checkpoints first!</strong></li>
                 </ol>
-                <h1>Your Evil Plan</h1>
-                <div>
-                    <ol id="chosen-moves">
-                    </ol>
-                    <button id="submit-moves" class="btn">Execute</button>
-                </div>
             </div>
-            <p></p>
-        </div>
 
-        <div class="col-lg-3">
+            <div class="row well">
+                <h4>Scoreboard</h4>
+                <ul id="player-info" style="list-style: none; padding-left: 0"></ul>
+            </div>
+
             <div class="row well">
                 <h4>Chat</h4>
-                <div id="chat-log" style="overflow-y: scroll; height:350px;"></div>
+
+                <pre id="chat-log" style="overflow-y: scroll; height:350px;"></pre>
                 <form id="chat">
                     <input class="form-control" type="text"/>
                 </form>
             </div>
 
             <div class="row well">
-                <h4>Server Log</h4>
-                <div id="server-log" style="overflow-y: scroll; height:350px;"></div>
+                <h4>Settings</h4>
+
+                <form id="config" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="player-name" class="control-label col-sm-4">Your Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control form-inline" id="player-name"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="player-name" class="control-label col-sm-4">Audio</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox" class="form-control" id="audio" />
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

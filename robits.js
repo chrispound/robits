@@ -1,4 +1,4 @@
-var DEBUG_MODE = false;//true;
+var DEBUG_MODE = false;
 
 var w = window,
     d = document,
@@ -12,7 +12,7 @@ var container = $('#robits');
 var width = container.width();
 var height = pageHeight - container.offset().top;
 
-var game = new Phaser.Game(1024, 835, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(Math.min(width, 1280), Math.min(height, 1280), Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
@@ -27,9 +27,13 @@ var colorScale = chroma.scale('RdYlBu');
 window.communication.initializeSocket();
 
 var sound = new Howl({
-    urls: ['https://cdn.rawgit.com/Atlas-/robits/master/assets/soundtrack.mp3'],
-    loop: true
-}).play();
+    autoplay: false,
+    buffer: true,
+    urls: ['assets/soundtrack.mp3'],
+    loop: true,
+    volume: 0.5
+});
+var MOVES_PER_TURN = 5;
 
 $(function () {
     $('#chat').submit(function (e) {
@@ -37,58 +41,98 @@ $(function () {
         $('#chat input').val('');
         e.preventDefault();
     });
-    
+
+    if(DEBUG_MODE) {
+      $('#possible-moves').hide();
+    }
+
     $('#submit-moves').click(function(e) {
+
         var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
             return $(command).html();
         });
-    
-        _.each(instructions, function (instruction) {
+        if(instructions.length != MOVES_PER_TURN) {
+          alert('Must select 5 evil moves!');
+        } else {
+          _.each(instructions, function (instruction) {
             gameData.addInstruction(gameData.localPlayer, instruction);
-        });
+          });
 
-        communication.localPlayerReady();
-        
+          communication.localPlayerReady();
+        }
+
         e.preventDefault();
+    });
+
+    $('#config').submit(function(e) {
+        gameData.localPlayer.data.name = $('#config input').val();
+
+        communication.localPlayerUpdated();
+
+        e.preventDefault();
+    });
+
+    $('#audio').change(function(e) {
+        if($(this).is(':checked')) {
+          sound.play();
+          sound.fade(0, 0.5, 1000);
+        } else {
+          sound.fade(0.5, 0, 1000, function() {
+            sound.pause();
+          });
+        }
     });
 });
 
 
 function displayPossibleMoves() {
-    
+    var NUM_MOVES_TO_GENERATE = 10;
+
     var possibleMovesDiv = $('#possible-moves').empty();
     var chosenMovesDiv = $('#chosen-moves').empty();
+
+    var imgId = 0;
     _.each(generateNewMoves(), function(move) {
-        possibleMovesDiv.append(
-            "<img data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
+      imgId++;
+      possibleMovesDiv.append(
+            "<img id='move"+ imgId +"' data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
         );
     });
-       
+
     /**
      * Set the callback for clicking on a move
      */
     $(".amove").click(function (e) {
-        chosenMovesDiv.append('<li class="instruction">' + this.dataset.move+ '</li>');
-        this.remove();
-        
-        // once 5 moves have been selected, empty the move div
-        if(possibleMovesDiv.children().length <= 5) {
-            possibleMovesDiv.empty();
+      var $this = $(this);
+      var id = this.getAttribute('id');
+      if(chosenMovesDiv.children().length == MOVES_PER_TURN) {
+        // cannot add another move but can remove moves
+        if($this.hasClass('chosen')) {
+          $this.removeClass('chosen');
+          $('.instruction[id='+id+']').remove();
         }
+      } else {
+        // can still add and delete
+        if($this.hasClass('chosen')) {
+          $this.removeClass('chosen');
+          $('.instruction[id='+id+']').remove();
+        } else {
+          $this.addClass('chosen');
+          chosenMovesDiv.append('<li class="instruction" id="' + id + '">' + this.dataset.move + '</li>');
+        }
+      }
     });
-    
+
     /**
      * Generate 10 possible moves from the move array
-     * Display them in the browser to the user
+     * Display them in the browser to the player
      */
     function generateNewMoves() {
         var newMoves = [];
-        for(i = 0; i < 10; i++) {
-            newMoves.push(_.sample(['left', 'right', 'up', 'down']));
-        }
+        _.times(NUM_MOVES_TO_GENERATE, function() {newMoves.push(_.sample(['left', 'right', 'up', 'down']))});
         return newMoves;
     }
-};
+}
 
 
 
@@ -161,12 +205,17 @@ function create() {
     });
 
     var localPlayerSetup = $.Deferred();
+
     gameData.serverSetup.then(function() {
+        $('#player-name').val(gameData.localPlayerId);
         gameData.localPlayer = addPlayer({id: gameData.localPlayerId});
         gameData.game.camera.follow(gameData.localPlayer);
 
-        communication.localPlayerSetupComplete();
         localPlayerSetup.resolve();
+    });
+
+    localPlayerSetup.then(function(){
+        communication.localPlayerSetupComplete();
     });
 
     if(DEBUG_MODE) {
@@ -231,11 +280,6 @@ function addPlayer(overwriteData) {
     player.body.setSize(128, 128);
 
     player.anchor.setTo(0.5, 0.5);
-
-    //if(DEBUG_MODE) {
-        var label = game.add.text(-61, 30, player.data.id, { font: '8px'});
-        player.addChild(label);
-    //}
 
     var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
     player.tint = parseInt(color.hex().replace("#", ""), 16);
@@ -352,7 +396,7 @@ function moveAtAngle(player, angle) {
 
 function hitCheckpoint(sprite, tile) {
 
-    // only emit a player checkpoint event if it is the local player 
+    // only emit a player checkpoint event if it is the local player
     // and it is not in the tiles array of players touched
   if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
     console.log("player scored a checkpoint");
@@ -360,7 +404,7 @@ function hitCheckpoint(sprite, tile) {
       if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
           gameData.restartGame(gameData.getPlayers())
           console.log("player touched last checkpoint, send win event!");
-          socket.emit("player won", sprite.data.id);
+          communication.localPlayerWins();
       };
       // useful later if we want to update each client with the players checkpoint data
 //    socket.emit("player checkpoint", sprite.data.id);

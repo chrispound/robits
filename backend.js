@@ -13,25 +13,18 @@ var Player = function (id) {
 
     return {
         moves: moves,
-        id: id
+        id: id,
+        getName: function () {
+            return this.name || this.id;
+        }
     }
 };
 
 var addPlayer = function (socket) {
-    var sessionId = socket.id;
-    var player = new Player(sessionId);
+    var player = new Player(socket.id);
     players.push(player);
 
-    log("--- THE FOLLOWING PLAYERS ARE CONNECTED ----", socket.room);
-    var clientsInRoom = getClientsByRoomId(socket.room);
-    for (var i = 0; i < clientsInRoom.length; i++) {
-        var existingPlayer = clientsInRoom[i];
-        log(existingPlayer.id, socket.room)
-    }
-
-    log("--------------------------------------------\n", socket.room);
-
-    socket.emit('assign id', existingPlayer.id);
+    io.to(socket.room).emit('assign id', player.id);
 
     emitGameChanged(socket.room);
 
@@ -40,19 +33,26 @@ var addPlayer = function (socket) {
 
 var dropUser = function (sessionId, roomId) {
     var removePlayer = players.indexOf(playerById(sessionId));
-    players.splice(removePlayer, 1);
-
+    if(removePlayer != -1) {
+        players.splice(removePlayer, 1);
+    }
     emitGameChanged(roomId);
+
 };
 
 function updatePlayer(clientPlayerData) {
     var player = _.findWhere(players, {id: clientPlayerData.id});
 
-    if(!player) {
+    if (!player) {
         player = new Player(clientPlayerData.id);
     }
 
+  if(player.getName() != clientPlayerData.name && !_.isUndefined(clientPlayerData.name)) {
+    log(player.getName() + " is now known as " + clientPlayerData.name);
+  }
+
     _.extend(player, {
+        name: clientPlayerData.name,
         startTile: clientPlayerData.startTile,
         moves: clientPlayerData.movementQueue
     });
@@ -74,6 +74,7 @@ function buildGameInfo() {
 app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
+
     console.log('User: connected');
     numOfUsersInRoom++;
     //when more than 4 players have connected make a new room.
@@ -82,13 +83,14 @@ io.sockets.on('connection', function (socket) {
         numOfUsersInRoom = 1;
     }
 
-        socket.room = roomId;
-        socket.join(socket.room);
-        console.log('set socket room id to: ' + socket.room, socket.room);
-        io.to(socket.room).emit('set room', socket.room);
-        log('user connected to room: ' + socket.room, socket.room);
-        io.to(socket.room).emit('game info', buildGameInfo());
-        var player = addPlayer(socket);
+
+    log('New player connected: ' + socket.id);
+    socket.room = roomId;
+    socket.join(socket.room);
+    io.to(socket.room).emit('set room', socket.room);
+    log('user connected to room: ' + socket.room, socket.room);
+    io.to(socket.room).emit('game info', buildGameInfo());
+    var player = addPlayer(socket);
 
     socket.on('chat', function (message) {
          io.to(socket.room).emit('chat', socket.id + ": " + message);
@@ -96,6 +98,23 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('player setup complete', function (playerData) {
+        var commandArr = message.match(/^#(\S+)\s*(.*)/);
+
+        var command = (commandArr && commandArr.length > 0) ? commandArr[1] : undefined;
+        var commandArgs = (commandArr && commandArr.length > 1) ? commandArr[2].split(/s+/) : [];
+        var useCommand = false;
+
+        if(!_.isUndefined(command)) {
+            useCommand = handleCommand(socket, command, commandArgs);
+        }
+
+        if(!useCommand) {
+            console.log(playerById(socket.id));
+            io.to(socket.room).emit('chat', playerById(socket.id).getName() + "> " + message);
+        }
+    });
+
+    socket.on('player updated', function (playerData) {
         updatePlayer(playerData);
         emitGameChanged(socket.room);
     });
@@ -110,8 +129,12 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         log('Disconnect: ' + socket.id + '\n', socket.room);
-        if (playerById(socket.id)) {
-            dropUser(socket.id, socket.room)
+        var player = playerById(socket.id);
+        if(player) {
+            log('Player ' + player.getName() + ' has disconnected', socket.room);
+            if (player) {
+                 dropUser(socket.id, socket.room)
+            }
         }
     });
 
@@ -123,8 +146,6 @@ io.sockets.on('connection', function (socket) {
         log("Player " + updatePlayer.id + " is ready", socket.room);
 
         var clientsInRoom = getClientsByRoomId(socket.room);
-        //look through list of players see if any match any of the ids with a client in the room.
-             console.log('looking for matching players');
 //        var playersInRoom = _.find(players, function(player){
 //           if(_.find(clientsInRoom, function(cleintId){
 //               console.log('checking if player ' + player.id + ' matches: '+ clientId);
@@ -145,6 +166,8 @@ io.sockets.on('connection', function (socket) {
         //look through list of players
         //check if the are ready.
         var allPlayersReady = !_.some(playersInRoom, function (player) {
+        log("Player " + updatePlayer.getName() + " is ready");
+
             return _.size(player.moves) === 0;
         });
 
@@ -176,27 +199,52 @@ io.sockets.on('connection', function (socket) {
 
 });
 
+
 function emitGameChanged(roomId) {
     io.to(roomId).emit('game info', buildGameInfo());
     io.to(roomId).emit('players changed', players);
 }
+        
+function handleCommand(socket, command, args) {
+    switch(command) {
+        case 'kick':
+            _.each(args, function(playerToKick) {
+                var kickPlayer = _.find(players, function(player) {
+                    return player.getName() === playerToKick;
+                });
+                if(kickPlayer) {
+                    var kickPlayerSocket = io.sockets.connected[kickPlayer.id];
+                    kickPlayerSocket.emit('kicked', 'Kicked by ' + playerById(socket.id).getName());
+                    kickPlayerSocket.disconnect();
+                }
+            });
+            return true;
+            break;
+        case 'help':
+            log('Commands:\n' +
+                '#kick <player>', socket);
+            return true;
+            break;
+    }
+
+    return false;
+}
+
 
 var port = Number(process.env.PORT || 3000);
 http.listen(port, function () {
-//    log('\nlistening on *:'+port+'\n', socket.room);
 });
 
 function playerById(id) {
-    var i;
-    for (i = 0; i < players.length; i++) {
+    for (var i = 0; i < players.length; i++) {
         if (players[i].id === id)
             return players[i];
     }
     return false;
 }
 
-function log(message, roomId) {
-    io.to(roomId).emit('log', message);
+function log(message, roomId, socket) {
+     (socket || io).to(roomId).emit('log', message);
     console.log(message);
 }
 
