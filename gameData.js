@@ -15,7 +15,6 @@ serverSetupPromise.then(function() {
 
 gameSetupPromise.then(function() {
     console.log('Game setup complete');
-    console.log(gameData.assignedStartTiles);
 });
 
 window.gameData = {

@@ -70,9 +70,6 @@ window.communication = (function(gameData) {
     }
 
     function updateGameData(serverGameInfo) {
-        console.log(serverGameInfo);
-
-        console.log(serverGameInfo);
         gameData.assignedStartTiles = serverGameInfo.assignedStartTiles || {};
         serverStateLoadedPromise.resolve();
     }
@@ -150,13 +147,18 @@ window.communication = (function(gameData) {
     }
 
     function logMessage(message) {
-        var log = $('#chat-log');
-        log.append('server> ' + message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+        logChatMessage('server> ' + message);
     }
 
     function logChatMessage(message) {
         var log = $('#chat-log');
-        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+        var escapedMessage = $('<div/>').text(message).html();
+        log.html(log.html() + escapedMessage + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+    }
+
+    function alertKicked(message) {
+        logMessage(message);
+        alert(message);
     }
 
     function setUpSocketReceivers() {
@@ -179,6 +181,8 @@ window.communication = (function(gameData) {
         socket.on('chat', logChatMessage);
 
         socket.on('game info', updateGameData);
+
+        socket.on('kicked', alertKicked);
     }
 })(gameData);
 

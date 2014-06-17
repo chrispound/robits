@@ -31,9 +31,11 @@ var addPlayer = function (socket) {
 
 var dropUser = function (sessionId) {
     var removePlayer = players.indexOf(playerById(sessionId));
-    players.splice(removePlayer, 1);
+    if(removePlayer != -1) {
+        players.splice(removePlayer, 1);
 
-    emitGameChanged();
+        emitGameChanged();
+    }
 };
 
 function updatePlayer(clientPlayerData) {
@@ -112,7 +114,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('disconnect', function () {
         var player = playerById(socket.id);
         if(player) {
-            log('Disconnect: ' + player.getName() + '\n');
+            log('Player ' + player.getName() + ' has disconnected');
             if (player) {
                 dropUser(socket.id)
             }
@@ -159,8 +161,6 @@ io.sockets.on('connection', function (socket) {
 });
 
 function handleCommand(socket, command, args) {
-    var handled = false;
-
     switch(command) {
         case 'kick':
             _.each(args, function(playerToKick) {
@@ -168,15 +168,21 @@ function handleCommand(socket, command, args) {
                     return player.getName() === playerToKick;
                 });
                 if(kickPlayer) {
-                    io.sockets.connected[kickPlayer.id].disconnect();
-                    dropUser(kickPlayer.id);
+                    var kickPlayerSocket = io.sockets.connected[kickPlayer.id];
+                    kickPlayerSocket.emit('kicked', 'Kicked by ' + playerById(socket.id).getName());
+                    kickPlayerSocket.disconnect();
                 }
             });
             return true;
             break;
+        case 'help':
+            log('Commands:\n' +
+                '#kick <player>', socket);
+            return true;
+            break;
     }
 
-    return handled;
+    return false;
 }
 
 function emitGameChanged() {
@@ -197,8 +203,8 @@ function playerById(id) {
     return false;
 }
 
-function log(message) {
-    io.emit('log', message);
+function log(message, socket) {
+    (socket || io).emit('log', message);
     console.log(message);
 }
 
