@@ -32,8 +32,6 @@ var sound = new Howl({
     volume: 0.5
 }).play();
 
-var localPlayerConfiguration = $.Deferred();
-
 $(function () {
     $('#chat').submit(function (e) {
         socket.emit('chat', $('#chat input').val());
@@ -58,8 +56,8 @@ $(function () {
     $('#config').submit(function(e) {
         gameData.localPlayer.data.name = $('#config input').val();
 
-        localPlayerConfiguration.resolve();
-        $('#config-container').slideUp();
+        communication.localPlayerUpdated();
+
         e.preventDefault();
     });
 });
@@ -180,7 +178,7 @@ function create() {
         localPlayerSetup.resolve();
     });
 
-    $.when(localPlayerConfiguration, localPlayerSetup).then(function(){
+    localPlayerSetup.then(function(){
         communication.localPlayerSetupComplete();
     });
 

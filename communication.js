@@ -18,7 +18,8 @@ window.communication = (function(gameData) {
     return {
         initializeSocket: setUpSocketReceivers,
         localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
-        localPlayerSetupComplete: function() { return setPlayerSetupComplete(gameData.localPlayer); },
+        localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
+        localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return playerDied(gameData.localPlayer); },
         localPlayerWins: function() { 
@@ -43,8 +44,8 @@ window.communication = (function(gameData) {
         }
     }
 
-    function setPlayerSetupComplete(player) {
-        socket.emit("player setup complete", getPlayerBroadcastInfo(player));
+    function setPlayerUpdated(player) {
+        socket.emit("player updated", getPlayerBroadcastInfo(player));
     }
 
     function setPlayerRoundReady(player) {
@@ -147,8 +148,8 @@ window.communication = (function(gameData) {
     }
 
     function logMessage(message) {
-        var log = $('#server-log');
-        log.append(message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
+        var log = $('#chat-log');
+        log.append('server> ' + message + '<br/>').prop('scrollTop', log.prop('scrollHeight'));
     }
 
     function logChatMessage(message) {

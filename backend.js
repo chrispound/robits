@@ -80,10 +80,10 @@ io.sockets.on('connection', function (socket) {
     }
 
     socket.on('chat', function (message) {
-        io.emit('chat', playerById(socket.id).getName() + ": " + message);
+        io.emit('chat', playerById(socket.id).getName() + "> " + message);
     });
 
-    socket.on('player setup complete', function (playerData) {
+    socket.on('player updated', function (playerData) {
         updatePlayer(playerData);
         emitGameChanged();
     });
