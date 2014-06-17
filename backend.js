@@ -4,6 +4,8 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var players = [];
+var roomId = 0;
+var numOfUsersInRoom = 0;
 
 var Player = function (id) {
     var moves;
@@ -22,19 +24,19 @@ var addPlayer = function (socket) {
 
     players.push(player);
 
-    socket.emit('assign id', player.id);
+    io.to(socket.room).emit('assign id', player.id);
 
-    emitGameChanged();
+    emitGameChanged(socket);
 
     return player;
 };
 
-var dropUser = function (sessionId) {
+var dropUser = function (sessionId, socket) {
     var removePlayer = players.indexOf(playerById(sessionId));
     if(removePlayer != -1) {
         players.splice(removePlayer, 1);
 
-        emitGameChanged();
+        emitGameChanged(socket);
     }
 };
 
@@ -72,14 +74,15 @@ app.use(express.static(__dirname));
 io.sockets.on('connection', function (socket) {
 
     log('New player connected: ' + socket.id);
-
-    socket.emit('game info', buildGameInfo());
-
-    if (players.length === 4) {
-        tooManyPlayersInGame(socket.id);
-    } else {
-        var player = addPlayer(socket);
+    numOfUsersInRoom++;
+    if(numOfUsersInRoom > 4){
+        roomId++;
+        numOfUsersInRoom = 1;
     }
+    socket.room = roomId;
+    socket.join(socket.room);
+    io.to(socket.room).emit('game info', buildGameInfo());
+    var player = addPlayer(socket);
 
     socket.on('chat', function (message) {
         var commandArr = message.match(/^#(\S+)\s*(.*)/);
@@ -94,13 +97,13 @@ io.sockets.on('connection', function (socket) {
 
         if(!useCommand) {
             console.log(playerById(socket.id));
-            io.emit('chat', playerById(socket.id).getName() + "> " + message);
+            io.to(socket.room).emit('chat', playerById(socket.id).getName() + "> " + message);
         }
     });
 
     socket.on('player updated', function (playerData) {
         updatePlayer(playerData);
-        emitGameChanged();
+        emitGameChanged(socket);
     });
 
     socket.on('player ready', function (playerData) {
@@ -116,7 +119,7 @@ io.sockets.on('connection', function (socket) {
         if(player) {
             log('Player ' + player.getName() + ' has disconnected');
             if (player) {
-                dropUser(socket.id)
+                dropUser(socket.id, socket)
             }
         }
     });
@@ -146,16 +149,16 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('player died', function (id) {
-        io.emit('player died', id)
+        io.to(socket.room).emit('player died', id)
     });
 
     socket.on('player checkpoint', function (id) {
         console.log('player hit checkpoint. updating clients');
-        io.emit('player checkpoint', id)
+        io.to(socket.room).emit('player checkpoint', id)
     });
 
     socket.on('player won', function (id) {
-        io.emit('player won', id);
+        io.to(socket.room).emit('player won', id);
     });
 
 });
@@ -185,9 +188,9 @@ function handleCommand(socket, command, args) {
     return false;
 }
 
-function emitGameChanged() {
-    io.emit('game info', buildGameInfo());
-    io.emit('players changed', players);
+function emitGameChanged(socket) {
+    io.to(socket.room).emit('game info', buildGameInfo());
+    io.to(socket.room).emit('players changed', players);
 }
 
 var port = Number(process.env.PORT || 3000);
@@ -203,8 +206,8 @@ function playerById(id) {
     return false;
 }
 
-function log(message, socket) {
-    (socket || io).emit('log', message);
+function log(message, socket, room) {
+    (socket || io).to(room).emit('log', message);
     console.log(message);
 }
 
