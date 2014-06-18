@@ -58,12 +58,12 @@ function updatePlayer(clientPlayerData) {
     });
 }
 
-function buildGameInfo() {
+function buildGameInfo(room) {
     return {
-        assignedStartTiles: _.object(_.map(players, function (player) {
+        assignedStartTiles: _.object(_.map(getAllPlayersInRoom(room), function (player) {
                 return player.id;
             }),
-            _.map(players, function (player) {
+            _.map(getAllPlayersInRoom(room), function (player) {
                 return player.startTile;
             }))
     };
@@ -81,7 +81,7 @@ io.sockets.on('connection', function (socket) {
     }
     socket.room = roomId;
     socket.join(socket.room);
-    io.to(socket.room).emit('game info', buildGameInfo());
+    io.to(socket.room).emit('game info', buildGameInfo(socket.room));
     var player = addPlayer(socket);
 
     socket.on('chat', function (message) {
@@ -131,15 +131,15 @@ io.sockets.on('connection', function (socket) {
 
         log("Player " + updatePlayer.getName() + " is ready");
 
-        var allPlayersReady = !_.some(players, function (player) {
+        var allPlayersReady = !_.some(getAllPlayersInRoom(socket.room), function (player) {
             return _.size(player.moves) === 0;
         });
 
         if (allPlayersReady) {
             log('*** All players are ready ***');
 
-            io.emit('all player moves ready', players);
-            _.each(players, clearMoves);
+            io.emit('all player moves ready', getAllPlayersInRoom(socket.room));
+            _.each(getAllPlayersInRoom(socket.room), clearMoves);
 
             function clearMoves(player) {
                 player.moves = []
@@ -167,7 +167,7 @@ function handleCommand(socket, command, args) {
     switch(command) {
         case 'kick':
             _.each(args, function(playerToKick) {
-                var kickPlayer = _.find(players, function(player) {
+                var kickPlayer = _.find(getAllPlayersInRoom(socket.room), function(player) {
                     return player.getName() === playerToKick;
                 });
                 if(kickPlayer) {
@@ -189,8 +189,8 @@ function handleCommand(socket, command, args) {
 }
 
 function emitGameChanged(socket) {
-    io.to(socket.room).emit('game info', buildGameInfo());
-    io.to(socket.room).emit('players changed', players);
+    io.to(socket.room).emit('game info', buildGameInfo(socket.room));
+    io.to(socket.room).emit('players changed', getAllPlayersInRoom(socket.room));
 }
 
 var port = Number(process.env.PORT || 3000);
@@ -209,6 +209,24 @@ function playerById(id) {
 function log(message, socket, room) {
     (socket || io).to(room).emit('log', message);
     console.log(message);
+}
+
+//todo in socket.io v 1.1 this can be replaced with (socket || io).clients(namespace,room)
+function getAllPlayersInRoom(roomId){
+  var namespace = '/';
+  var clientsIdInRoom = [];
+  var playersInRoom = [];
+  for (var socketId in io.nsps[namespace].adapter.rooms[roomId]) {
+      clientsIdInRoom.push(socketId);
+  }
+  for(var i=0; i < clientsIdInRoom.length; i++){
+      for(var f = 0; f < players.length; f++){
+        if(clientsIdInRoom[i] == players[f].id){
+           playersInRoom.push(players[f]);
+        }
+      }
+  }
+  return playersInRoom;
 }
 
 
