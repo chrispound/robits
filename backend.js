@@ -58,12 +58,12 @@ function updatePlayer(clientPlayerData) {
     });
 }
 
-function buildGameInfo() {
+function buildGameInfo(room) {
     return {
-        assignedStartTiles: _.object(_.map(players, function (player) {
+        assignedStartTiles: _.object(_.map(getAllPlayersInRoom(room), function (player) {
                 return player.id;
             }),
-            _.map(players, function (player) {
+            _.map(getAllPlayersInRoom(room), function (player) {
                 return player.startTile;
             }))
     };
@@ -73,15 +73,17 @@ app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
 
-    log('New player connected: ' + socket.id);
     numOfUsersInRoom++;
     if(numOfUsersInRoom > 4){
         roomId++;
         numOfUsersInRoom = 1;
     }
+
+    log('New player connected to room '+roomId+': ' + socket.id, roomId);
+
     socket.room = roomId;
     socket.join(socket.room);
-    io.to(socket.room).emit('game info', buildGameInfo());
+    io.to(socket.room).emit('game info', buildGameInfo(socket.room));
     var player = addPlayer(socket);
 
     socket.on('chat', function (message) {
@@ -129,17 +131,17 @@ io.sockets.on('connection', function (socket) {
         var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
 
-        log("Player " + updatePlayer.getName() + " is ready");
+        log("Player " + updatePlayer.getName() + " is ready", socket.room);
 
-        var allPlayersReady = !_.some(players, function (player) {
+        var allPlayersReady = !_.some(getAllPlayersInRoom(socket.room), function (player) {
             return _.size(player.moves) === 0;
         });
 
         if (allPlayersReady) {
-            log('*** All players are ready ***');
+            log('*** All players are ready ***', socket.room);
 
-            io.emit('all player moves ready', players);
-            _.each(players, clearMoves);
+            io.emit('all player moves ready', getAllPlayersInRoom(socket.room));
+            _.each(getAllPlayersInRoom(socket.room), clearMoves);
 
             function clearMoves(player) {
                 player.moves = []
@@ -153,7 +155,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('player checkpoint', function (id) {
-        console.log('player hit checkpoint. updating clients');
+        console.log('player hit checkpoint. updating clients', socket.room);
         io.to(socket.room).emit('player checkpoint', id)
     });
 
@@ -167,7 +169,7 @@ function handleCommand(socket, command, args) {
     switch(command) {
         case 'kick':
             _.each(args, function(playerToKick) {
-                var kickPlayer = _.find(players, function(player) {
+                var kickPlayer = _.find(getAllPlayersInRoom(socket.room), function(player) {
                     return player.getName() === playerToKick;
                 });
                 if(kickPlayer) {
@@ -180,7 +182,7 @@ function handleCommand(socket, command, args) {
             break;
         case 'help':
             log('Commands:\n' +
-                '#kick <player>', socket);
+                '#kick <player>', socket.room, socket);
             return true;
             break;
     }
@@ -189,13 +191,13 @@ function handleCommand(socket, command, args) {
 }
 
 function emitGameChanged(socket) {
-    io.to(socket.room).emit('game info', buildGameInfo());
-    io.to(socket.room).emit('players changed', players);
+    io.to(socket.room).emit('game info', buildGameInfo(socket.room));
+    io.to(socket.room).emit('players changed', getAllPlayersInRoom(socket.room));
 }
 
 var port = Number(process.env.PORT || 3000);
 http.listen(port, function () {
-    log('\nlistening on *:' + port + '\n');
+    console.log('\nlistening on *:' + port + '\n');
 });
 
 function playerById(id) {
@@ -206,9 +208,28 @@ function playerById(id) {
     return false;
 }
 
-function log(message, socket, room) {
-    (socket || io).to(room).emit('log', message);
+function log(message, room, socket) {
+    var target = socket ? socket : (room ? io.to(room) : io);
+    target.emit('log', message);
     console.log(message);
+}
+
+//todo in socket.io v 1.1 this can be replaced with (socket || io).clients(namespace,room)
+function getAllPlayersInRoom(roomId){
+  var namespace = '/';
+  var clientsIdInRoom = [];
+  var playersInRoom = [];
+  for (var socketId in io.nsps[namespace].adapter.rooms[roomId]) {
+      clientsIdInRoom.push(socketId);
+  }
+  for(var i=0; i < clientsIdInRoom.length; i++){
+      for(var f = 0; f < players.length; f++){
+        if(clientsIdInRoom[i] == players[f].id){
+           playersInRoom.push(players[f]);
+        }
+      }
+  }
+  return playersInRoom;
 }
 
 
