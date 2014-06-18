@@ -79,7 +79,7 @@ io.sockets.on('connection', function (socket) {
         numOfUsersInRoom = 1;
     }
 
-    log('New player connected to room '+roomId+': ' + socket.id);
+    log('New player connected to room '+roomId+': ' + socket.id, roomId);
 
     socket.room = roomId;
     socket.join(socket.room);
@@ -131,14 +131,14 @@ io.sockets.on('connection', function (socket) {
         var updatePlayer = playerById(socket.id);
         updatePlayer.moves = moves;
 
-        log("Player " + updatePlayer.getName() + " is ready");
+        log("Player " + updatePlayer.getName() + " is ready", socket.room);
 
         var allPlayersReady = !_.some(getAllPlayersInRoom(socket.room), function (player) {
             return _.size(player.moves) === 0;
         });
 
         if (allPlayersReady) {
-            log('*** All players are ready ***');
+            log('*** All players are ready ***', socket.room);
 
             io.emit('all player moves ready', getAllPlayersInRoom(socket.room));
             _.each(getAllPlayersInRoom(socket.room), clearMoves);
@@ -155,7 +155,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('player checkpoint', function (id) {
-        console.log('player hit checkpoint. updating clients');
+        console.log('player hit checkpoint. updating clients', socket.room);
         io.to(socket.room).emit('player checkpoint', id)
     });
 
@@ -182,7 +182,7 @@ function handleCommand(socket, command, args) {
             break;
         case 'help':
             log('Commands:\n' +
-                '#kick <player>', socket);
+                '#kick <player>', socket.room, socket);
             return true;
             break;
     }
@@ -197,7 +197,7 @@ function emitGameChanged(socket) {
 
 var port = Number(process.env.PORT || 3000);
 http.listen(port, function () {
-    log('\nlistening on *:' + port + '\n');
+    console.log('\nlistening on *:' + port + '\n');
 });
 
 function playerById(id) {
@@ -208,8 +208,9 @@ function playerById(id) {
     return false;
 }
 
-function log(message, socket, room) {
-    (socket || io).to(room).emit('log', message);
+function log(message, room, socket) {
+    var target = socket ? socket : (room ? io.to(room) : io);
+    target.emit('log', message);
     console.log(message);
 }
 
