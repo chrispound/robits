@@ -73,12 +73,14 @@ app.use(express.static(__dirname));
 
 io.sockets.on('connection', function (socket) {
 
-    log('New player connected: ' + socket.id);
     numOfUsersInRoom++;
     if(numOfUsersInRoom > 4){
         roomId++;
         numOfUsersInRoom = 1;
     }
+
+    log('New player connected to room '+roomId+': ' + socket.id);
+
     socket.room = roomId;
     socket.join(socket.room);
     io.to(socket.room).emit('game info', buildGameInfo(socket.room));
