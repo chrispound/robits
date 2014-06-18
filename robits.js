@@ -152,8 +152,8 @@ function directionToAngle(direction) {
 }
 
 function preload() {
-    game.load.tilemap('map', 'assets/map1.json', null, Phaser.Tilemap.TILED_JSON);
-    game.load.image('tileset', 'assets/tileset.png');
+    game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.image('standard_tiles', 'assets/standard_tiles.png');
     game.load.image('robot', 'assets/robot.png');
 }
 
@@ -179,7 +179,7 @@ function create() {
     game.stage.backgroundColor = '#787878';
 
     map = game.add.tilemap('map');
-    map.addTilesetImage('tileset');
+    map.addTilesetImage('standard_tiles');
 
     map.setCollision(6);
     map.setTileIndexCallback(3, goThroughPortal, this);

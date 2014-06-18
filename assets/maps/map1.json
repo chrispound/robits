@@ -10,31 +10,6 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
-        {
-         "height":10,
-         "name":"Object Layer 1",
-         "objects":[
-                {
-                 "gid":5,
-                 "height":0,
-                 "name":"hole",
-                 "properties":
-                    {
-
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":256,
-                 "y":256
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
         }],
  "orientation":"orthogonal",
  "properties":
@@ -45,11 +20,11 @@
  "tilesets":[
         {
          "firstgid":1,
-         "image":"tileset.png",
+         "image":"..\/standard_tiles.png",
          "imageheight":128,
          "imagewidth":768,
          "margin":0,
-         "name":"tileset",
+         "name":"standard_tiles",
          "properties":
             {
 
