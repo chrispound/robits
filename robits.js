@@ -265,7 +265,6 @@ function addPlayer(overwriteData) {
     var player = game.add.sprite(0, 0, 'robot');
 
     player.data = _.extend({
-        health: 5,
         movementQueue: [],
         id: Math.random(),
         isTeleporting: false,
@@ -274,6 +273,7 @@ function addPlayer(overwriteData) {
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
+    player.health = 1;
 
     resetToStart(player);
     game.physics.arcade.enable(player);
@@ -436,9 +436,10 @@ function goThroughPortal(sprite, tile) {
   * and their movement is halted.
   */
 function fallInHole(sprite, tile) {
-    sprite.data.health--;
-    if(sprite.data.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
-       communication.localPlayerDied();
+    sprite.damage(1);
+    if(sprite.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
+        console.log('the local player has died');
+        communication.localPlayerDied();
     }
     resetToStart(sprite);
     clearSpriteMovement(sprite);

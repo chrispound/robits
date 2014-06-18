@@ -63,11 +63,11 @@ window.gameData = {
         moveFunction.instruction = instruction;
         player.data.movementQueue.push(moveFunction);
     },
-    restartGame: function(players){
-        gameData.game.paused = false;
+    restartGame: function(players) {
         _.each(players, function(player){
               clearSpriteMovement(player);
               resetToStart(player);
+              player.revive(5);
               player.data.movementQueue = [];
         });
         _.each(gameData.checkpointTiles, function(tile) {

@@ -58,13 +58,20 @@ window.communication = (function(gameData) {
     }
 
     function playerDied(player) {
-        if(player.id === gameData.localPlayer.data.id){
+        if(player.data.id === gameData.localPlayer.data.id){
            console.log('player died: ' + player.id )
-           gameData.game.paused = true;
+           gameData.localPlayer.kill();
            socket.emit('player died', gameData.localPlayer.data.id);
         }
         else{
-            //handle the player dying
+            var deadPlayer = gameData.getPlayer(player.id)
+                deadPlayer.kill();
+        }
+        if(!_.some(gameData.getPlayers(), function(player) {
+            return player.alive;
+        })) 
+        {
+          gameData.restartGame(gameData.getPlayers());   
         }
     }
 
