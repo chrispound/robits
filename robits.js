@@ -26,13 +26,6 @@ var colorScale = chroma.scale('RdYlBu');
 
 window.communication.initializeSocket();
 
-var sound = new Howl({
-    autoplay: false,
-    buffer: true,
-    urls: ['assets/soundtrack.mp3'],
-    loop: true,
-    volume: 0.5
-});
 var MOVES_PER_TURN = 5;
 
 $(function () {
@@ -72,15 +65,23 @@ $(function () {
         e.preventDefault();
     });
 
-    $('#audio').change(function(e) {
-        if($(this).is(':checked')) {
-          sound.play();
-          sound.fade(0, 0.5, 1000);
-        } else {
-          sound.fade(0.5, 0, 1000, function() {
-            sound.pause();
-          });
-        }
+    $('#music').change(function(e) {
+      if($(this).is(':checked')) {
+        gameData.music.play();
+        gameData.music.fade(0, 0.5, 1000);
+      } else {
+        gameData.music.fade(0.5, 0, 1000, function() {
+          gameData.music.pause();
+        });
+      }
+    });
+
+    $('#sounds').change(function(e) {
+      if($(this).is(':checked')) {
+        gameData.sounds.unmute();
+      } else {
+        gameData.sounds.mute();
+      }
     });
 });
 
@@ -155,6 +156,23 @@ function preload() {
     game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles.png');
     game.load.image('robot', 'assets/robot.png');
+
+    gameData.sounds = new Howl({
+        urls: ['assets/sounds.mp3'],
+        sprite: {
+          drive: [0, 1000, true],
+          reachCheckpoint: [2000, 3000],
+          gameOver: [4000, 7500]
+        }
+    });
+
+    gameData.music = new Howl({
+        autoplay: false,
+        buffer: true,
+        urls: ['assets/soundtrack.mp3'],
+        loop: true,
+        volume: 0.5
+    });
 }
 
 // Doesn't work completely right
@@ -383,6 +401,8 @@ function tryMovement(player) {
 function moveAtAngle(player, angle) {
     player.data.stepInProgress = true;
 
+    gameData.sounds.play('drive');
+
     var distance = 128;
     var speed = 500;
     var time = distance / speed;
@@ -399,13 +419,16 @@ function hitCheckpoint(sprite, tile) {
     // only emit a player checkpoint event if it is the local player
     // and it is not in the tiles array of players touched
   if (sprite.data.id == gameData.localPlayer.data.id && !_.contains(tile.playersTouched, sprite.data.id)) {
+
+    gameData.sounds.play('reachCheckpoint');
+
     console.log("player scored a checkpoint");
     tile.playersTouched.push(sprite.data.id);
       if(_.every(gameData.checkpointTiles, function(tile) { return _.contains(tile.playersTouched, sprite.data.id); })) {
           gameData.restartGame(gameData.getPlayers())
           console.log("player touched last checkpoint, send win event!");
           communication.localPlayerWins();
-      };
+      }
       // useful later if we want to update each client with the players checkpoint data
 //    socket.emit("player checkpoint", sprite.data.id);
   }
@@ -449,6 +472,9 @@ function clearSpriteMovement(sprite) {
     sprite.body.velocity.x = 0;
     sprite.body.velocity.y = 0;
     sprite.data.stepInProgress = false;
+
+    sounds.stop('drive');
+
     centerOnTile(sprite);
 }
 
