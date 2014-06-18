@@ -150,6 +150,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('player died', function (id) {
         io.to(socket.room).emit('player died', id)
+        log('player: ' + id + ' died!')
     });
 
     socket.on('player checkpoint', function (id) {

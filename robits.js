@@ -265,10 +265,12 @@ function addPlayer(overwriteData) {
     var player = game.add.sprite(0, 0, 'robot');
 
     player.data = _.extend({
+        health: 5,
         movementQueue: [],
         id: Math.random(),
         isTeleporting: false,
-        checkpoints: []
+        checkpoints: [],
+
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
@@ -434,6 +436,10 @@ function goThroughPortal(sprite, tile) {
   * and their movement is halted.
   */
 function fallInHole(sprite, tile) {
+    sprite.data.health--;
+    if(sprite.data.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
+       communication.localPlayerDied();
+    }
     resetToStart(sprite);
     clearSpriteMovement(sprite);
     return false;

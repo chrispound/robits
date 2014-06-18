@@ -16,6 +16,7 @@ window.communication = (function(gameData) {
     });
 
     return {
+
         initializeSocket: setUpSocketReceivers,
         localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
         localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
@@ -57,7 +58,14 @@ window.communication = (function(gameData) {
     }
 
     function playerDied(player) {
-        socket.emit("player died", player.data.id)
+        if(player.id === gameData.localPlayer.data.id){
+           console.log('player died: ' + player.id )
+           gameData.game.paused = true;
+           socket.emit('player died', gameData.localPlayer.data.id);
+        }
+        else{
+            //handle the player dying
+        }
     }
 
     function playerWins(player) {

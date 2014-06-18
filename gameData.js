@@ -64,6 +64,7 @@ window.gameData = {
         player.data.movementQueue.push(moveFunction);
     },
     restartGame: function(players){
+        gameData.game.paused = false;
         _.each(players, function(player){
               clearSpriteMovement(player);
               resetToStart(player);
@@ -84,6 +85,7 @@ window.gameData = {
             $('#player-info').append(playerInfo);
         });
     }
+
 };
 
 function getCheckpointsTouched(player) {
