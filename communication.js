@@ -18,6 +18,10 @@ window.communication = (function(gameData) {
     return {
 
         initializeSocket: setUpSocketReceivers,
+        requestUpdate: requestUpdate,
+        chat: function(message) {
+            socket.emit('chat', message);
+        },
         localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
         localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
@@ -43,6 +47,10 @@ window.communication = (function(gameData) {
                 y: player.data.startTile.y
             }
         }
+    }
+
+    function requestUpdate() {
+        socket.emit("request update");
     }
 
     function setPlayerUpdated(player) {
@@ -76,8 +84,8 @@ window.communication = (function(gameData) {
     }
 
     function playerWins(player) {
-        gameData.restartGame(gameData.getPlayers());
         alert("Game Over: " + player.data.name || player.data.id + " wins!");
+        gameData.restartGame(gameData.getPlayers());
     }
 
     function fullGame(){

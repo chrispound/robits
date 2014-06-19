@@ -76,13 +76,19 @@ window.gameData = {
     },
     redrawPlayerInfo: function() {
         $('#player-info').empty();
-        _.each(gameData.getPlayers(), function(player) {
+
+      _.each(gameData.getPlayers(), function(player) {
             var playerInfo = $('<li/>');
 
-            var checkpointsHit = getCheckpointsTouched(player);
+            var checkpointsHit = gameData.getCheckpointsTouched(player);
 
-            playerInfo.html((player.data.name || player.data.id) + ': ' + ((checkpointsHit && checkpointsHit.length) || 0 + '/' + gameData.checkpointTiles.length));
+            playerInfo.html((player.data.name || player.data.id) + ': ' + (((checkpointsHit && checkpointsHit.length) || '0') + '/' + gameData.checkpointTiles.length));
             $('#player-info').append(playerInfo);
+        });
+    },
+    getCheckpointsTouched: function(player) {
+        return _.filter(gameData.checkpointTiles, function(tile) {
+            return _.contains(tile.playersTouched, player.data.id)
         });
     }
 
@@ -93,3 +99,4 @@ function getCheckpointsTouched(player) {
         return _.contains(tile.playersTouched, player.data.id)
     });
 }
+
