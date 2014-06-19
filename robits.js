@@ -214,12 +214,43 @@ function addPlayer(overwriteData) {
 
     player.anchor.setTo(0.5, 0.5);
 
-    var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
+    var color = colorScale(getLowDiscrepancyNumber(_.size(gameData.getPlayers())));
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     gameData.addPlayer(player);
 
     return player;
+}
+
+/* Generates the sequence 0, 1, 1/2, 1/4, 3/4, 1/8, 3/8, ... */
+function getLowDiscrepancyNumber(n) {
+    if(n === 0 || n === 1) {
+        return n;
+    }
+    var accountedFor = [0, 1];
+
+    var lastResult;
+    while(accountedFor.length - 1 < n) {
+        lastResult = getNext(accountedFor.length);
+        accountedFor.push(lastResult);
+        accountedFor.sort();
+    }
+
+    return lastResult;
+
+    function getNext(n) {
+        var maxDist = 0, winner;
+        for(var i = 0; i < accountedFor.length - 1; i++) {
+            var distFromHereToNext = accountedFor[i+1] - accountedFor[i];
+
+            if(distFromHereToNext > maxDist) {
+                maxDist = distFromHereToNext;
+                winner = i;
+            }
+        }
+
+        return (accountedFor[winner + 1] + accountedFor[winner]) / 2;
+    }
 }
 
 function addRandomPath(player) {
