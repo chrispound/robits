@@ -30,14 +30,17 @@ $(function () {
         e.preventDefault();
     });
 
-    $('#config').submit(function(e) {
+    $('#player-name').blur(updateConfig);
+    $('#config').submit(updateConfig);
+    
+    function updateConfig(e) {
         gameData.localPlayer.data.name = $('#player-name').val();
         settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
 
         communication.localPlayerUpdated();
 
         e.preventDefault();
-    });
+    }
 
     $('#audio')
         .prop('checked', (settings.musicOn === 'true'))
