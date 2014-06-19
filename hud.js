@@ -1,6 +1,7 @@
 window.hud = {};
 
 $(function () {
+
     $('#chat').submit(function (e) {
         var $chat = $('#chat');
         communication.chat($chat.find('input').val());
@@ -8,16 +9,16 @@ $(function () {
         e.preventDefault();
     });
 
-    if(DEBUG_MODE) {
+    if (DEBUG_MODE) {
         $('#possible-moves').hide();
     }
 
-    $('#submit-moves').click(function(e) {
+    $('#submit-moves').click(function (e) {
 
         var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
-            return $(command).html();
+            return $(command).find('img').data().move;
         });
-        if(instructions.length != MOVES_PER_TURN) {
+        if (instructions.length != MOVES_PER_TURN) {
             alert('Must select 5 evil moves!');
         } else {
             _.each(instructions, function (instruction) {
@@ -32,7 +33,7 @@ $(function () {
 
     $('#player-name').blur(updateConfig);
     $('#config').submit(updateConfig);
-    
+
     function updateConfig(e) {
         gameData.localPlayer.data.name = $('#player-name').val();
         settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
@@ -44,31 +45,34 @@ $(function () {
 
     $('#audio')
         .prop('checked', (settings.musicOn === 'true'))
-        .change(function(e) {
-            if($(this).is(':checked')) {
+        .change(function (e) {
+            if ($(this).is(':checked')) {
                 sound.play();
                 sound.fade(0, 0.5, 1000);
                 settings.updateSetting('musicOn', true);
             } else {
-                sound.fade(0.5, 0, 1000, function() {
+                sound.fade(0.5, 0, 1000, function () {
                     sound.pause();
                 });
                 settings.updateSetting('musicOn', false);
             }
         });
 
-    hud.displayPossibleMoves = function() {
+    hud.displayPossibleMoves = function () {
         var NUM_MOVES_TO_GENERATE = 10;
 
         var possibleMovesDiv = $('#possible-moves').empty();
         var chosenMovesDiv = $('#chosen-moves').empty();
 
         var imgId = 0;
-        _.each(generateNewMoves(), function(move) {
+
+        function getMoveImage(id, direction) {
+            return $("<img id='"+ id +"' data-move='" + direction + "' data-src='assets/arrow-" + direction + ".png' src='assets/arrow-" + direction + ".png' class='img-rounded amove' alt='" + direction + "'>");
+        }
+
+        _.each(generateNewMoves(), function (move) {
             imgId++;
-            possibleMovesDiv.append(
-                    "<img id='move"+ imgId +"' data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
-            );
+            possibleMovesDiv.append(getMoveImage(imgId, move));
         });
 
         /**
@@ -77,20 +81,23 @@ $(function () {
         $(".amove").click(function (e) {
             var $this = $(this);
             var id = this.getAttribute('id');
-            if(chosenMovesDiv.children().length == MOVES_PER_TURN) {
+            if (chosenMovesDiv.children().length == MOVES_PER_TURN) {
                 // cannot add another move but can remove moves
-                if($this.hasClass('chosen')) {
+                if ($this.hasClass('chosen')) {
                     $this.removeClass('chosen');
-                    $('.instruction[id='+id+']').remove();
+                    $('.instruction[id=' + id + ']').remove();
                 }
             } else {
                 // can still add and delete
-                if($this.hasClass('chosen')) {
+                if ($this.hasClass('chosen')) {
                     $this.removeClass('chosen');
-                    $('.instruction[id='+id+']').remove();
+                    $('.instruction[id=' + id + ']').remove();
                 } else {
+
                     $this.addClass('chosen');
-                    chosenMovesDiv.append('<li class="instruction" id="' + id + '">' + this.dataset.move + '</li>');
+                    var instruction = $('<li class="instruction" id="' + id + '"></li>');
+                    instruction.append(getMoveImage('chosen-move-' + id, this.dataset.move));
+                    chosenMovesDiv.append(instruction);
                 }
             }
         });
@@ -101,7 +108,9 @@ $(function () {
          */
         function generateNewMoves() {
             var newMoves = [];
-            _.times(NUM_MOVES_TO_GENERATE, function() {newMoves.push(_.sample(['left', 'right', 'up', 'down']))});
+            _.times(NUM_MOVES_TO_GENERATE, function () {
+                newMoves.push(_.sample(['left', 'right', 'up', 'down']))
+            });
             return newMoves;
         }
     }
