@@ -37,6 +37,7 @@ var sound = new Howl({
 var MOVES_PER_TURN = 5;
 var camera_position;
 
+
 function preload() {
     game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles.png');
