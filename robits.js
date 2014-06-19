@@ -33,134 +33,10 @@ var sound = new Howl({
     loop: true,
     volume: 0.5
 });
+
 var MOVES_PER_TURN = 5;
+var camera_position;
 
-$(function () {
-    $('#chat').submit(function (e) {
-        var $chat = $('#chat');
-        socket.emit('chat', $chat.find('input').val());
-        $chat.find('input').val('');
-        e.preventDefault();
-    });
-
-    if(DEBUG_MODE) {
-      $('#possible-moves').hide();
-    }
-
-    $('#submit-moves').click(function(e) {
-
-        var instructions = _.map($('#chosen-moves').find('.instruction'), function (command) {
-            return $(command).html();
-        });
-        if(instructions.length != MOVES_PER_TURN) {
-          alert('Must select 5 evil moves!');
-        } else {
-          _.each(instructions, function (instruction) {
-            gameData.addInstruction(gameData.localPlayer, instruction);
-          });
-
-          communication.localPlayerReady();
-        }
-
-        e.preventDefault();
-    });
-
-
-    $('#player-name').blur(updateConfig);
-    $('#config').submit(updateConfig);
-
-    function updateConfig(e) {
-        gameData.localPlayer.data.name = $('#player-name').val();
-        settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
-
-        communication.localPlayerUpdated();
-
-        e.preventDefault();
-    }
-
-    //debugger;
-    $('#audio')
-        .prop('checked', (settings.musicOn === 'true'))
-        .change(function(e) {
-        if($(this).is(':checked')) {
-          sound.play();
-          sound.fade(0, 0.5, 1000);
-          settings.updateSetting('musicOn', true);
-        } else {
-          sound.fade(0.5, 0, 1000, function() {
-            sound.pause();
-          });
-          settings.updateSetting('musicOn', false);
-        }
-    });
-});
-
-
-function displayPossibleMoves() {
-    var NUM_MOVES_TO_GENERATE = 10;
-
-    var possibleMovesDiv = $('#possible-moves').empty();
-    var chosenMovesDiv = $('#chosen-moves').empty();
-
-    var imgId = 0;
-    _.each(generateNewMoves(), function(move) {
-      imgId++;
-      possibleMovesDiv.append(
-            "<img id='move"+ imgId +"' data-move='" + move + "' data-src='assets/arrow-" + move + ".png' src='assets/arrow-" + move + ".png' class='img-rounded amove' alt='" + move + "' style='width: 96px; height: 96px;'>"
-        );
-    });
-
-    /**
-     * Set the callback for clicking on a move
-     */
-    $(".amove").click(function (e) {
-      var $this = $(this);
-      var id = this.getAttribute('id');
-      if(chosenMovesDiv.children().length == MOVES_PER_TURN) {
-        // cannot add another move but can remove moves
-        if($this.hasClass('chosen')) {
-          $this.removeClass('chosen');
-          $('.instruction[id='+id+']').remove();
-        }
-      } else {
-        // can still add and delete
-        if($this.hasClass('chosen')) {
-          $this.removeClass('chosen');
-          $('.instruction[id='+id+']').remove();
-        } else {
-          $this.addClass('chosen');
-          chosenMovesDiv.append('<li class="instruction" id="' + id + '">' + this.dataset.move + '</li>');
-        }
-      }
-    });
-
-    /**
-     * Generate 10 possible moves from the move array
-     * Display them in the browser to the player
-     */
-    function generateNewMoves() {
-        var newMoves = [];
-        _.times(NUM_MOVES_TO_GENERATE, function() {newMoves.push(_.sample(['left', 'right', 'up', 'down']))});
-        return newMoves;
-    }
-}
-
-
-
-function directionToAngle(direction) {
-    switch (direction) {
-        case 'right':
-            return 0;
-        case 'left':
-            return 180;
-        case 'down':
-            return 90;
-        case 'up':
-            return 270;
-        default:
-            return 0;
-    }
-}
 
 function preload() {
     game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
@@ -221,6 +97,14 @@ function create() {
         $('#player-name').val(settings.localPlayerName || gameData.localPlayerId);
         gameData.localPlayer = addPlayer({id: gameData.localPlayerId, name: settings.localPlayerName});
         gameData.game.camera.follow(gameData.localPlayer);
+        gameData.localPlayer.inputEnabled = true;
+        gameData.localPlayer.events.onInputDown.add(function(){
+            if(gameData.game.camera.target === gameData.localPlayer) {
+                gameData.game.camera.unfollow();
+            } else {
+                gameData.game.camera.follow(gameData.localPlayer);
+            }
+        }, this);
 
         localPlayerSetup.resolve();
     });
@@ -248,6 +132,45 @@ function create() {
     localPlayerSetup.then(function() {
         gameData.clientSetup.resolve();
     });
+
+}
+
+function update() {
+    moveCamera(game.input.mousePointer);
+    moveCamera(game.input.pointer1);
+
+    clearTeleportFlags();
+    if (firstTime) {
+        firstTime = false;
+        gameData.roundReady = true
+    }
+
+    if (gameData.roundReady) {
+        if(gameData.roundPending) {
+            gameData.game.camera.follow(gameData.localPlayer);
+            gameData.roundPending = false;
+        }
+        updateRound();
+        tryRoundDone();
+    } else {
+        //planning stage
+
+        /*_.each(gameData.getPlayers(), function(player) {
+         addRandomPath(player);
+         });
+
+         gameData.roundReady = true;*/
+
+        if (gameData.localPlayer && DEBUG_MODE) {
+            gameData.roundReady = true;
+        }
+    }
+}
+
+function render() {
+    if (gameData.localPlayer && DEBUG_MODE) {
+        game.debug.body(gameData.localPlayer);
+    }
 }
 
 function chooseStartTile(playerId) {
@@ -292,12 +215,43 @@ function addPlayer(overwriteData) {
 
     player.anchor.setTo(0.5, 0.5);
 
-    var color = colorScale(_.size(gameData.getPlayers()) / maxPlayers);
+    var color = colorScale(getLowDiscrepancyNumber(_.size(gameData.getPlayers())));
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     gameData.addPlayer(player);
 
     return player;
+}
+
+/* Generates the sequence 0, 1, 1/2, 1/4, 3/4, 1/8, 3/8, ... */
+function getLowDiscrepancyNumber(n) {
+    if(n === 0 || n === 1) {
+        return n;
+    }
+    var accountedFor = [0, 1];
+
+    var lastResult;
+    while(accountedFor.length - 1 < n) {
+        lastResult = getNext(accountedFor.length);
+        accountedFor.push(lastResult);
+        accountedFor.sort();
+    }
+
+    return lastResult;
+
+    function getNext(n) {
+        var maxDist = 0, winner;
+        for(var i = 0; i < accountedFor.length - 1; i++) {
+            var distFromHereToNext = accountedFor[i+1] - accountedFor[i];
+
+            if(distFromHereToNext > maxDist) {
+                maxDist = distFromHereToNext;
+                winner = i;
+            }
+        }
+
+        return (accountedFor[winner + 1] + accountedFor[winner]) / 2;
+    }
 }
 
 function addRandomPath(player) {
@@ -321,35 +275,21 @@ function clearTeleportFlags() {
   });
 }
 
-function update() {
-    clearTeleportFlags();
-    if (firstTime) {
-        firstTime = false;
-        gameData.roundReady = true
-    }
-
-    if (gameData.roundReady) {
-        updateRound();
-        tryRoundDone();
-    } else {
-        //planning stage
-
-        /*_.each(gameData.getPlayers(), function(player) {
-         addRandomPath(player);
-         });
-
-         gameData.roundReady = true;*/
-
-        if (gameData.localPlayer && DEBUG_MODE) {
-            gameData.roundReady = true;
+// Borrowed from http://www.html5gamedevs.com/topic/2410-drag-the-camera/?p=39215
+function moveCamera(o_pointer) {
+    if (!o_pointer.timeDown) { return; }
+    if (o_pointer.isDown && !o_pointer.targetObject) {
+        if(gameData.game.camera.target) {
+            gameData.game.camera.unfollow();
         }
-    }
-}
 
-function render() {
-    if (gameData.localPlayer && DEBUG_MODE) {
-        game.debug.body(gameData.localPlayer);
+        if (camera_position) {
+            game.camera.x += camera_position.x - o_pointer.position.x;
+            game.camera.y += camera_position.y - o_pointer.position.y;
+        }
+        camera_position = o_pointer.position.clone();
     }
+    if (o_pointer.isUp) { camera_position = null; }
 }
 
 function tryRoundDone() {
@@ -372,13 +312,29 @@ function updateRound() {
 
 function endRound() {
     gameData.roundReady = false;
-    displayPossibleMoves();
+    gameData.roundPending = true;
+    hud.displayPossibleMoves();
 }
 
 function queueMove(player, direction) {
     if (!_.isUndefined(direction)) {
         var angle = directionToAngle(direction);
         player.data.movementQueue.push(_.partial(moveAtAngle, player, angle));
+    }
+}
+
+function directionToAngle(direction) {
+    switch (direction) {
+        case 'right':
+            return 0;
+        case 'left':
+            return 180;
+        case 'down':
+            return 90;
+        case 'up':
+            return 270;
+        default:
+            return 0;
     }
 }
 

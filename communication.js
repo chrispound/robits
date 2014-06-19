@@ -18,6 +18,9 @@ window.communication = (function(gameData) {
     return {
         initializeSocket: setUpSocketReceivers,
         requestUpdate: requestUpdate,
+        chat: function(message) {
+            socket.emit('chat', message);
+        },
         localPlayerReady: function() { return setPlayerRoundReady(gameData.localPlayer); },
         localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
