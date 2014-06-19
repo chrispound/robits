@@ -27,7 +27,7 @@ var colorScale = chroma.scale('RdYlBu');
 window.communication.initializeSocket();
 
 var sound = new Howl({
-    autoplay: false,
+    autoplay: (settings.musicOn === 'true'),
     buffer: true,
     urls: ['assets/soundtrack.mp3'],
     loop: true,
@@ -37,8 +37,9 @@ var MOVES_PER_TURN = 5;
 
 $(function () {
     $('#chat').submit(function (e) {
-        socket.emit('chat', $('#chat input').val());
-        $('#chat input').val('');
+        var $chat = $('#chat');
+        socket.emit('chat', $chat.find('input').val());
+        $chat.find('input').val('');
         e.preventDefault();
     });
 
@@ -65,21 +66,27 @@ $(function () {
     });
 
     $('#config').submit(function(e) {
-        gameData.localPlayer.data.name = $('#config input').val();
+        gameData.localPlayer.data.name = $('#player-name').val();
+        settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
 
         communication.localPlayerUpdated();
 
         e.preventDefault();
     });
 
-    $('#audio').change(function(e) {
+    //debugger;
+    $('#audio')
+        .prop('checked', (settings.musicOn === 'true'))
+        .change(function(e) {
         if($(this).is(':checked')) {
           sound.play();
           sound.fade(0, 0.5, 1000);
+          settings.updateSetting('musicOn', true);
         } else {
           sound.fade(0.5, 0, 1000, function() {
             sound.pause();
           });
+          settings.updateSetting('musicOn', false);
         }
     });
 });
@@ -207,8 +214,8 @@ function create() {
     var localPlayerSetup = $.Deferred();
 
     gameData.serverSetup.then(function() {
-        $('#player-name').val(gameData.localPlayerId);
-        gameData.localPlayer = addPlayer({id: gameData.localPlayerId});
+        $('#player-name').val(settings.localPlayerName || gameData.localPlayerId);
+        gameData.localPlayer = addPlayer({id: gameData.localPlayerId, name: settings.localPlayerName});
         gameData.game.camera.follow(gameData.localPlayer);
 
         localPlayerSetup.resolve();
