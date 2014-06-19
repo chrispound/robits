@@ -66,13 +66,13 @@ $(function () {
 
         var imgId = 0;
 
-        function getArrow(id, direction) {
+        function getMoveImage(id, direction) {
             return $("<img id='"+ id +"' data-move='" + direction + "' data-src='assets/arrow-" + direction + ".png' src='assets/arrow-" + direction + ".png' class='img-rounded amove' alt='" + direction + "'>");
         }
 
         _.each(generateNewMoves(), function (move) {
             imgId++;
-            possibleMovesDiv.append(getArrow(imgId, move));
+            possibleMovesDiv.append(getMoveImage(imgId, move));
         });
 
         /**
@@ -96,7 +96,7 @@ $(function () {
 
                     $this.addClass('chosen');
                     var instruction = $('<li class="instruction" id="' + id + '"></li>');
-                    instruction.append(getArrow('chosen-move-' + id, this.dataset.move));
+                    instruction.append(getMoveImage('chosen-move-' + id, this.dataset.move));
                     chosenMovesDiv.append(instruction);
                 }
             }
