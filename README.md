@@ -1,4 +1,8 @@
-# Get up and Running
+# Play
+
+[Play online here](http://tscrobits.herokuapp.com/)
+
+# Contribute
 
 * Install `node`
 * Install `bower` with `node` (`npm install -g bower`)
