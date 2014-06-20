@@ -9,9 +9,11 @@ var numOfUsersInRoom = 0;
 
 var Player = function (id) {
     var moves;
+    var alive;
 
     return {
         moves: moves,
+        alive: alive,
         id: id,
         getName: function () {
             return this.name || this.id;
@@ -21,7 +23,7 @@ var Player = function (id) {
 
 var addPlayer = function (socket) {
     var player = new Player(socket.id);
-
+    player.alive = true;
     players.push(player);
 
     io.to(socket.room).emit('assign id', player.id);
@@ -32,7 +34,7 @@ var addPlayer = function (socket) {
 };
 
 var dropUser = function (sessionId, socket) {
-    var removePlayer = players.indexOf(playerById(sessionId));
+    var removePlayer = players.indexOf(getPlayerById(sessionId));
     if(removePlayer != -1) {
         players.splice(removePlayer, 1);
 
@@ -98,8 +100,8 @@ io.sockets.on('connection', function (socket) {
         }
 
         if(!useCommand) {
-            console.log(playerById(socket.id));
-            io.to(socket.room).emit('chat', playerById(socket.id).getName() + "> " + message);
+            console.log(getPlayerById(socket.id));
+            io.to(socket.room).emit('chat', getPlayerById(socket.id).getName() + "> " + message);
         }
     });
 
@@ -121,7 +123,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
-        var player = playerById(socket.id);
+        var player = getPlayerById(socket.id);
         if(player) {
             log('Player ' + player.getName() + ' has disconnected');
             if (player) {
@@ -132,13 +134,16 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('player moves ready', function (player) {
         var moves = player.movementQueue;
-        var updatePlayer = playerById(socket.id);
+        var updatePlayer = getPlayerById(socket.id);
         updatePlayer.moves = moves;
 
         log("Player " + updatePlayer.getName() + " is ready", socket.room);
 
-        var allPlayersReady = !_.some(getAllPlayersInRoom(socket.room), function (player) {
-            return _.size(player.moves) === 0;
+            //if a player is found alive and without moves all players are not ready.
+        var allPlayersReady = !_.find(getAllPlayersInRoom(socket.room), function (player) {
+            console.log(player.alive);
+            console.log(player.moves.length)
+            return  player.alive && player.moves.length === 0;
         });
 
         if (allPlayersReady) {
@@ -155,7 +160,10 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('player died', function (id) {
-        io.to(socket.room).emit('player died', id)
+        var deadPlayer = getPlayerById(id);
+        deadPlayer.alive = false;
+        io.to(socket.room).emit('player died', id);
+        log(deadPlayer.getName() + ' died!')
     });
 
     socket.on('player checkpoint', function (id) {
@@ -178,7 +186,7 @@ function handleCommand(socket, command, args) {
                 });
                 if(kickPlayer) {
                     var kickPlayerSocket = io.sockets.connected[kickPlayer.id];
-                    kickPlayerSocket.emit('kicked', 'Kicked by ' + playerById(socket.id).getName());
+                    kickPlayerSocket.emit('kicked', 'Kicked by ' + getPlayerById(socket.id).getName());
                     kickPlayerSocket.disconnect();
                 }
             });
@@ -204,7 +212,7 @@ http.listen(port, function () {
     console.log('\nlistening on *:' + port + '\n');
 });
 
-function playerById(id) {
+function getPlayerById(id) {
     for (var i = 0; i < players.length; i++) {
         if (players[i].id === id)
             return players[i];

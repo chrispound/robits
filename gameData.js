@@ -18,6 +18,7 @@ gameSetupPromise.then(function() {
 });
 
 window.gameData = {
+    PLAYER_CHILDREN_LABELS: {label: 'label', energy:'energy'},
     localPlayerId: null,
     clientSetup: clientSetupPromise,
     serverSetup: serverSetupPromise,
@@ -49,12 +50,15 @@ window.gameData = {
           newLabel = newLabel.substr(0, 4) + '...';
         }
 
-        label = player.children.length && player.getChildAt(0);
+        label = player.children.length && _.find(player.children, function(child) {
+             return child.key ===  gameData.PLAYER_CHILDREN_LABELS.label
+        });
 
         if(label) {
             label.text = newLabel;
         } else if(!_.isUndefined(newLabel)) {
             var label = game.add.text(-21, 30, newLabel, { "font-size": '12px'});
+            label.key = gameData.PLAYER_CHILDREN_LABELS.label;
             player.addChild(label);
         }
     },
@@ -67,6 +71,8 @@ window.gameData = {
         _.each(players, function(player){
               clearSpriteMovement(player);
               resetToStart(player);
+              player.revive(5);
+              gameData.updatePlayerHealth(player);
               player.data.movementQueue = [];
         });
         _.each(gameData.checkpointTiles, function(tile) {
@@ -89,6 +95,22 @@ window.gameData = {
         return _.filter(gameData.checkpointTiles, function(tile) {
             return _.contains(tile.playersTouched, player.data.id)
         });
+    },
+    playerLostEnergy: function(player){
+       //find the last child that is an energy and remove it.
+       var f = 0;
+       while(player.getChildAt(f).key === gameData.PLAYER_CHILDREN_LABELS.energy){
+            f++;
+       }
+       var energy = player.getChildAt(f - 1)
+       energy.destroy();
+    },
+
+    updatePlayerHealth: function (sprite){
+        for(var h = 0; h < sprite.health; h++){
+            var energy = this.game.add.sprite( (h * 15) + -40, -65, gameData.PLAYER_CHILDREN_LABELS.energy);
+            sprite.addChild(energy, energy.x, energy.y);
+        }
     }
 };
 

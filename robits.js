@@ -38,9 +38,10 @@ var MOVES_PER_TURN = 5;
 var camera_position;
 
 function preload() {
-    game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.tilemap('map', 'assets/maps/map1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles.png');
     game.load.image('robot', 'assets/robot.png');
+    game.load.image('energy', 'assets/ic_battery_mockup.png');
 }
 
 // Doesn't work completely right
@@ -205,6 +206,7 @@ function addPlayer(overwriteData) {
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
+    player.health = 5;
 
     resetToStart(player);
     game.physics.arcade.enable(player);
@@ -218,7 +220,7 @@ function addPlayer(overwriteData) {
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     gameData.addPlayer(player);
-
+    gameData.updatePlayerHealth(player);
     return player;
 }
 
@@ -405,8 +407,15 @@ function goThroughPortal(sprite, tile) {
   * and their movement is halted.
   */
 function fallInHole(sprite, tile) {
-    resetToStart(sprite);
+    sprite.damage(1);
+    gameData.playerLostEnergy(sprite);
+    if(sprite.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
+        console.log('the local player has died');
+        communication.localPlayerDied();
+    }
+    sprite.data.movementQueue = [];
     clearSpriteMovement(sprite);
+    resetToStart(sprite);
     return false;
 }
 
@@ -420,6 +429,9 @@ function clearSpriteMovement(sprite) {
     sprite.body.velocity.x = 0;
     sprite.body.velocity.y = 0;
     sprite.data.stepInProgress = false;
+    if(!sprite.alive){
+        sprite.data.movementQueue = [];
+    }
     centerOnTile(sprite);
 }
 

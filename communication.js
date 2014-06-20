@@ -25,10 +25,8 @@ window.communication = (function(gameData) {
         localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
-        localPlayerDied: function() { return playerDied(gameData.localPlayer); },
-        localPlayerWins: function() { 
-            return playerWins(gameData.localPlayer);
-        }
+        localPlayerDied: function() { return setPlayerDied(gameData.localPlayer); },
+        localPlayerWins: function() { return playerWins(gameData.localPlayer);}
     };
 
     function setLocalPlayerId(id) {
@@ -64,8 +62,29 @@ window.communication = (function(gameData) {
         socket.emit("player left", player.data.id);
     }
 
+    function setPlayerDied(player) {
+        socket.emit('player died', player.data.id);
+    }
+
     function playerDied(player) {
-        socket.emit("player died", player.data.id)
+        if(typeof player === 'string') {
+            player = gameData.getPlayer(player);
+        }
+
+        if(player.data.id === gameData.localPlayer.data.id){
+           gameData.localPlayer.kill();
+        } else {
+            var deadPlayer = gameData.getPlayer(player.id);
+                deadPlayer.kill();
+        }
+
+        var everyoneIsDead = !_.some(gameData.getPlayers(), function(player) {
+            return player.alive;
+        });
+
+        if(everyoneIsDead) {
+          gameData.restartGame(gameData.getPlayers());   
+        }
     }
 
     function playerWins(player) {
