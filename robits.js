@@ -206,7 +206,7 @@ function addPlayer(overwriteData) {
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
-    player.health = 1;
+    player.health = 5;
 
     resetToStart(player);
     game.physics.arcade.enable(player);
