@@ -26,9 +26,7 @@ window.communication = (function(gameData) {
         localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
         localPlayerDied: function() { return setPlayerDied(gameData.localPlayer); },
-        localPlayerWins: function() { 
-            return playerWins(gameData.localPlayer);
-        }
+        localPlayerWins: function() { return playerWins(gameData.localPlayer);}
     };
 
     function setLocalPlayerId(id) {
