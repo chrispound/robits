@@ -51,7 +51,6 @@ window.gameData = {
         }
 
         label = player.children.length && _.find(player.children, function(child) {
-            //the label child does not have a key! that sucks!
              return child.key ===  gameData.PLAYER_CHILDREN_LABELS.label
         });
 
