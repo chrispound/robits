@@ -4,84 +4,93 @@
     <meta charset="UTF-8">
     <title>Robits</title>
 
+    <!-- Disable browser zooming to ensure a good mobile experience -->
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+
+    <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="robits.css" rel="stylesheet">
 
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/jquery-ui/ui/jquery-ui.js"></script>
+    <script src="components/jquery-ui-touch-punch/jquery.ui.touch-punch.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="bower_components/phaser/phaser.js"></script>
-    <script src="bower_components/underscore/underscore.js"></script>
+    <script src="bower_components/lodash/dist/lodash.js"></script>
     <script src="bower_components/chroma-js/chroma.js"></script>
     <script src="bower_components/howler/howler.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
+    <script src="hud.js"></script>
     <script src="settings.js"></script>
     <script src="gameData.js"></script>
     <script src="communication.js"></script>
-    <script src="hud.js"></script>
     <script src="robits.js" defer></script>
 </head>
 <body cz-shortcut-listen="true">
 <div id="robits">
-    <div class="top right">
-        <div class="translucent-well">
-            <h4>Scoreboard</h4>
-            <ul id="player-info" style="list-style: none; padding-left: 0"></ul>
-        </div>
 
-        <div class="translucent-well">
-            <h4>Chat</h4>
+    <span id="toolbar" class="hud-panel">
+        <span class="glyphicon glyphicon-cog" id="toggle-settings" title="Settings"></span>
+        <span class="glyphicon glyphicon-question-sign" id="toggle-help" title="Help"></span>
+        <span class="glyphicon glyphicon-comment" id="toggle-chat-panel" title="Chat"></span>
+        <span class="glyphicon glyphicon-user" id="toggle-scoreboard" title="Scoreboard"></span>
+        <span class="glyphicon glyphicon-list" id="toggle-plan" title="Plan"></span>
+    </span>
 
-            <pre id="chat-log" style="overflow-y: scroll; height:350px;"></pre>
-            <form id="chat">
+    <div id="scoreboard" class="hud-panel translucent-well draggable">
+        <h4>Scoreboard</h4>
+        <ul id="player-info" style="list-style: none; padding-left: 0"></ul>
+    </div>
+
+    <div id="chat-panel" class="hud-panel translucent-well draggable">
+        <h4>Chat</h4>
+
+        <pre id="chat-log" style="overflow-y: scroll; height:350px;"></pre>
+        <form id="chat">
                 <input class="form-control" type="text"/>
-            </form>
-        </div>
+        </form>
     </div>
-    <div class="bottom center">
-        <div class="translucent-well">
-            <h2 style="display: inline; margin-right: 20px">Evil Plan</h2>
 
-            <span id="possible-moves"></span>
+    <div id="plan" class="hud-panel translucent-well draggable">
+        <h2 style="display: inline; margin-right: 20px">Evil Plan</h2>
 
-            <button id="submit-moves" class="btn btn-primary btn-lg">
-                Execute
-                <ol id="chosen-moves" style="display: inline"></ol>
-            </button>
-        </div>
+        <span id="possible-moves"></span>
+
+        <button id="submit-moves" class="btn btn-primary btn-lg">
+            Execute
+            <ol id="chosen-moves" style="display: inline"></ol>
+        </button>
     </div>
-    <div class="top left">
 
-        <div id="directions" class="translucent-well">
-            <h1 style="margin-top: 0">How to Robits</h1>
-            <ol>
-                <li><strong>Wait for your enemies to join.</strong></li>
-                <li><strong>Select 5 out of 10 evil moves.</strong></li>
-                <li><strong>Try to get to the checkpoints first!</strong></li>
-            </ol>
-        </div>
+    <div id="help" class="hud-panel translucent-well draggable">
+        <h1 style="margin-top: 0">How to Robits</h1>
+        <ol>
+            <li><strong>Wait for your enemies to join.</strong></li>
+            <li><strong>Select 5 out of 10 evil moves.</strong></li>
+            <li><strong>Try to get to the checkpoints first!</strong></li>
+        </ol>
+    </div>
 
-        <div class="translucent-well">
-            <h4>Settings</h4>
+    <div id="settings" class="hud-panel translucent-well draggable">
+        <h4>Settings</h4>
 
-            <form id="config" class="form-horizontal">
-                <div class="form-group">
-                    <label for="player-name" class="control-label col-sm-4">Your Name</label>
+        <form id="config" class="form-horizontal">
+            <div class="form-group">
+                <label for="player-name" class="control-label col-sm-4">Your Name</label>
 
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control form-inline" id="player-name"/>
-                    </div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control form-inline" id="player-name"/>
                 </div>
-                <div class="form-group">
-                    <label for="player-name" class="control-label col-sm-4">Audio</label>
+            </div>
+            <div class="form-group">
+                <label for="player-name" class="control-label col-sm-4">Audio</label>
 
-                    <div class="col-sm-8">
-                        <input type="checkbox" class="form-control" id="audio"/>
-                    </div>
+                <div class="col-sm-8">
+                    <input type="checkbox" class="form-control" id="audio"/>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
 </body>

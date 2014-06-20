@@ -45,8 +45,12 @@ body {
     margin-right: auto;
 }
 
-#robits * {
+#robits .hud-panel {
     position: relative;
+}
+
+#robits > .hud-panel {
+    position: absolute;
     z-index: 1000;
 }
 
@@ -54,38 +58,6 @@ body {
     margin-left: auto;
     margin-right: auto;
     z-index: 0
-}
-
-#robits .center, #robits .left, #robits .right, #robits .bottom, #robits .top {
-    position: absolute;
-}
-
-#robits .right {
-    right: 0;
-}
-
-#robits .bottom {
-    bottom: 0;
-}
-
-#robits .top {
-    top: 0
-}
-
-#robits .left {
-    left: 0
-}
-
-#robits .center {
-    width: 1055px;
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-}
-
-#robits .center .translucent-well {
-    display: inline-block;
 }
 
 .translucent-well {
@@ -108,4 +80,8 @@ body {
 
 .translucent-well * {
     opacity: 1;
+}
+
+#toolbar {
+    font-size: 30pt;
 }
