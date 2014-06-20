@@ -7,8 +7,7 @@
     <link href="./bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
 
     <script src="./bower_components/jquery/dist/jquery.js"></script>
-    <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-
+    <script src="./bower_components/jquery-ui/ui/jquery-ui.js"></script>
     <script src="./bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="./bower_components/phaser/phaser.js"></script>
     <script src="./bower_components/underscore/underscore.js"></script>
@@ -24,14 +23,44 @@
 
     <style>
         body {
+            margin-top: 10px;
+        }
+
+        .row.well {
+            margin-right: 5px;
+        }
+
+        body {
             background-color: darkslategrey;
         }
         .amove {
             margin: 0 1px 0 1px;
+            width: 72px;
+            height: 72px;
         }
         .chosen {
             opacity: .5;
             background-color: green;
+        }
+        #chosen-moves {
+            padding-left: 0;
+            margin: 0;
+        }
+
+        #chosen-moves li {
+            display: inline;
+            list-style-type: none;
+            padding-right: 5px;
+        }
+        #chosen-moves .amove {
+            width: 24px;
+            height: 24px;
+
+        }
+
+        #possible-moves {
+            margin-right: 20px;
+            color: white;
         }
     </style>
 </head>
@@ -41,17 +70,14 @@
     <div class="row">
         <div class="col-lg-9">
             <div class="well">
-                <h1>Your Evil Plan</h1>
-                <div class="row">
-                    <div class="col-lg-10">
-                        <p>Possible Moves</p>
-                        <div id="possible-moves"></div>
-                    </div>
-                    <div class="col-lg-2">
-                        <button id="submit-moves" class="btn">Execute</button>
-                        <ol id="chosen-moves"></ol>
-                    </div>
-                </div>
+                <h2 style="display: inline; margin-right: 20px">Evil Plan</h2>
+
+                <span id="possible-moves"></span>
+
+                <button id="submit-moves" class="btn btn-primary btn-lg">
+                    Execute
+                    <ol id="chosen-moves" style="display: inline"></ol>
+                </button>
             </div>
 
             <div id="robits"></div>
