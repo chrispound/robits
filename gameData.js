@@ -81,7 +81,7 @@ window.gameData = {
 
             var checkpointsHit = gameData.getCheckpointsTouched(player);
 
-            playerInfo.html((player.data.name || player.data.id) + ': ' + (((checkpointsHit && checkpointsHit.length) || '0') + '/' + gameData.checkpointTiles.length));
+            playerInfo.html(escapeHtml(player.data.name || player.data.id) + ': ' + (((checkpointsHit && checkpointsHit.length) || '0') + '/' + gameData.checkpointTiles.length));
             $('#player-info').append(playerInfo);
         });
     },
@@ -91,3 +91,10 @@ window.gameData = {
         });
     }
 };
+
+//Credit: http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
