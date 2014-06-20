@@ -16,7 +16,6 @@ window.communication = (function(gameData) {
     });
 
     return {
-
         initializeSocket: setUpSocketReceivers,
         requestUpdate: requestUpdate,
         chat: function(message) {

@@ -68,7 +68,7 @@ window.gameData = {
         moveFunction.instruction = instruction;
         player.data.movementQueue.push(moveFunction);
     },
-    restartGame: function(players) {
+    restartGame: function(players){
         _.each(players, function(player){
               clearSpriteMovement(player);
               resetToStart(player);
@@ -105,12 +105,5 @@ window.gameData = {
        var energy = player.getChildAt(f - 1)
        energy.destroy();
     }
-
-};
-
-function getCheckpointsTouched(player) {
-    _.filter(gameData.checkpointTiles, function(tile) {
-        return _.contains(tile.playersTouched, player.data.id)
-    });
-}
+ };
 

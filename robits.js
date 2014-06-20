@@ -38,7 +38,7 @@ var MOVES_PER_TURN = 5;
 var camera_position;
 
 function preload() {
-    game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.tilemap('map', 'assets/maps/map1.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles.png');
     game.load.image('robot', 'assets/robot.png');
     game.load.image('energy', 'assets/ic_battery_mockup.png');
@@ -203,7 +203,6 @@ function addPlayer(overwriteData) {
         id: Math.random(),
         isTeleporting: false,
         checkpoints: [],
-
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
@@ -414,8 +413,8 @@ function fallInHole(sprite, tile) {
         console.log('the local player has died');
         communication.localPlayerDied();
     }
-    resetToStart(sprite);
     clearSpriteMovement(sprite);
+    resetToStart(sprite);
     return false;
 }
 
@@ -429,6 +428,7 @@ function clearSpriteMovement(sprite) {
     sprite.body.velocity.x = 0;
     sprite.body.velocity.y = 0;
     sprite.data.stepInProgress = false;
+    sprite.data.movementQueue = [];
     centerOnTile(sprite);
 }
 
