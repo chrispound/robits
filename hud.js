@@ -35,7 +35,7 @@ $(function () {
     $('#config').submit(updateConfig);
 
     function updateConfig(e) {
-        gameData.localPlayer.data.name = $('#player-name').val();
+        gameData.localPlayer.data.name = escapeHtml($('#player-name').val());
         settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
 
         communication.localPlayerUpdated();
@@ -115,3 +115,17 @@ $(function () {
         }
     }
 });
+
+//Credit: http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+function unescapeHtml(escapedStr) {
+    var div = document.createElement('div');
+    div.innerHTML = escapedStr;
+    var child = div.childNodes[0];
+    return child ? child.nodeValue : '';
+}
