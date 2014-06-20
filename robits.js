@@ -42,6 +42,7 @@ function preload() {
     game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles.png');
     game.load.image('robot', 'assets/robot.png');
+    game.load.image('energy', 'assets/ic_battery_mockup.png');
 }
 
 // Doesn't work completely right
@@ -207,7 +208,7 @@ function addPlayer(overwriteData) {
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
-    player.health = 1;
+    player.health = 5;
 
     resetToStart(player);
     game.physics.arcade.enable(player);
@@ -221,7 +222,7 @@ function addPlayer(overwriteData) {
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     gameData.addPlayer(player);
-
+    updatePlayerHealth(player);
     return player;
 }
 
@@ -448,4 +449,12 @@ function getTilesOfIndex(tileIndex) {
     return _.filter(_.flatten(layer.layer.data, true), function (tile) {
         return tile.index === tileIndex;
     });
+}
+
+function updatePlayerHealth(sprite){
+    for(var h = 0; h < sprite.health; h++){
+        var energy = this.game.add.sprite( (h * 15) + -40, -65, 'energy');
+        sprite.addChild(energy, energy.x, energy.y);
+    }
+
 }
