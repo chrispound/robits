@@ -25,7 +25,7 @@ window.communication = (function(gameData) {
         localPlayerSetupComplete: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerUpdated: function() { return setPlayerUpdated(gameData.localPlayer); },
         localPlayerDisconnect: function() { return disconnect(gameData.localPlayer); },
-        localPlayerDied: function() { return playerDied(gameData.localPlayer); },
+        localPlayerDied: function() { return setPlayerDied(gameData.localPlayer); },
         localPlayerWins: function() { 
             return playerWins(gameData.localPlayer);
         }
@@ -64,20 +64,27 @@ window.communication = (function(gameData) {
         socket.emit("player left", player.data.id);
     }
 
+    function setPlayerDied(player) {
+        socket.emit('player died', player.data.id);
+    }
+
     function playerDied(player) {
-        if(player.data.id === gameData.localPlayer.data.id){
-           console.log('player died: ' + player.id )
-           gameData.localPlayer.kill();
-           socket.emit('player died', gameData.localPlayer.data.id);
+        if(typeof player === 'string') {
+            player = gameData.getPlayer(player);
         }
-        else{
-            var deadPlayer = gameData.getPlayer(player.id)
+
+        if(player.data.id === gameData.localPlayer.data.id){
+           gameData.localPlayer.kill();
+        } else {
+            var deadPlayer = gameData.getPlayer(player.id);
                 deadPlayer.kill();
         }
-        if(!_.some(gameData.getPlayers(), function(player) {
+
+        var everyoneIsDead = !_.some(gameData.getPlayers(), function(player) {
             return player.alive;
-        })) 
-        {
+        });
+
+        if(everyoneIsDead) {
           gameData.restartGame(gameData.getPlayers());   
         }
     }

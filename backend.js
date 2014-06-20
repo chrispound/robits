@@ -162,8 +162,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('player died', function (id) {
         var deadPlayer = getPlayerById(id);
         deadPlayer.alive = false;
-        io.to(socket.room).emit('player died', id)
-        log('player: ' + id + ' died!')
+        io.to(socket.room).emit('player died', id);
+        log(deadPlayer.getName() + ' died!')
     });
 
     socket.on('player checkpoint', function (id) {
