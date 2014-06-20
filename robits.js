@@ -206,7 +206,7 @@ function addPlayer(overwriteData) {
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
-    player.health = 5;
+    player.health = 1;
 
     resetToStart(player);
     game.physics.arcade.enable(player);
@@ -413,6 +413,7 @@ function fallInHole(sprite, tile) {
         console.log('the local player has died');
         communication.localPlayerDied();
     }
+    sprite.data.movementQueue = [];
     clearSpriteMovement(sprite);
     resetToStart(sprite);
     return false;
@@ -428,7 +429,9 @@ function clearSpriteMovement(sprite) {
     sprite.body.velocity.x = 0;
     sprite.body.velocity.y = 0;
     sprite.data.stepInProgress = false;
-    sprite.data.movementQueue = [];
+    if(!sprite.alive){
+        sprite.data.movementQueue = [];
+    }
     centerOnTile(sprite);
 }
 
