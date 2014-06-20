@@ -28,7 +28,7 @@ window.communication.initializeSocket();
 
 var sound = new Howl({
     autoplay: (settings.musicOn === 'true'),
-    buffer: true,
+    buffer: false,
     urls: ['assets/soundtrack.mp3'],
     loop: true,
     volume: 0.5
