@@ -72,7 +72,7 @@ window.gameData = {
               clearSpriteMovement(player);
               resetToStart(player);
               player.revive(5);
-              gameData.updatePlayerHealth(player)
+              gameData.updatePlayerHealth(player);
               player.data.movementQueue = [];
         });
         _.each(gameData.checkpointTiles, function(tile) {
