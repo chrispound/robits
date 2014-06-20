@@ -9,10 +9,11 @@ var w = window,
 
 var container = $('#robits');
 
-var width = container.width();
-var height = pageHeight - container.offset().top;
+// Use as much of the visible window as possible
+gameData.width = pageWidth - container.offset().left;
+gameData.height = pageHeight - container.offset().top;
 
-var game = new Phaser.Game(Math.min(width, 1280), Math.min(height, 1280), Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+var game = new Phaser.Game(Math.min(gameData.width, 1280), Math.min(gameData.height, 1280), Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
 
 var layer, map;
 var cursors;
@@ -54,9 +55,15 @@ function resizeGame() {
     game.stage.bounds.width = width;
     game.stage.bounds.height = height;
     game.camera.setSize(width, height);
+
     if (game.renderType === Phaser.WEBGL) {
         game.renderer.resize(width, height);
     }
+}
+
+function scaleGame(scale) {
+    gameData.game.world.scale.x = scale;
+    gameData.game.world.scale.y = scale;
 }
 
 function create() {
@@ -352,7 +359,7 @@ function moveAtAngle(player, angle) {
     player.data.stepInProgress = true;
 
     var distance = 128;
-    var speed = 500;
+    var speed = 350;
     var time = distance / speed;
 
     this.target = [player.x + distance, player.y];
@@ -435,8 +442,8 @@ function clearSpriteMovement(sprite) {
     centerOnTile(sprite);
 }
 
-function centerOnTile(sprite) {
-    var tile = map.getTileWorldXY(sprite.x, sprite.y);
+function centerOnTile(sprite, tile) {
+    tile = tile || map.getTileWorldXY(sprite.x, sprite.y);
 
     var tileCenter = getTileCenter(tile);
 

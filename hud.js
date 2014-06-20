@@ -2,6 +2,10 @@ window.hud = {};
 
 $(function () {
 
+    /* The hud container (#robits) should stretch to the full size of the
+     * visible window to maximize the use of space */
+    $('#robits').width($('body').width()).height(gameData.height);
+
     $('#chat').submit(function (e) {
         var $chat = $('#chat');
         communication.chat($chat.find('input').val());
