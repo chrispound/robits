@@ -148,20 +148,7 @@ function displayPossibleMoves() {
 
 
 
-function directionToAngle(direction) {
-    switch (direction) {
-        case 'right':
-            return 0;
-        case 'left':
-            return 180;
-        case 'down':
-            return 90;
-        case 'up':
-            return 270;
-        default:
-            return 0;
-    }
-}
+
 
 function preload() {
     game.load.tilemap('map', 'assets/maps/map2.json', null, Phaser.Tilemap.TILED_JSON);
