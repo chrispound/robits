@@ -578,7 +578,7 @@ function getTilesOfIndex(tileIndex) {
 
 function updatePlayerHealth(sprite){
     for(var h = 0; h < sprite.health; h++){
-        var energy = this.game.add.sprite( (h * 15) + -40, -65, 'energy');
+        var energy = this.game.add.sprite( (h * 15) + -40, -65, gameData.PLAYER_CHILDREN_LABELS.energy);
         sprite.addChild(energy, energy.x, energy.y);
     }
 

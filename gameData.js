@@ -18,6 +18,7 @@ gameSetupPromise.then(function() {
 });
 
 window.gameData = {
+    PLAYER_CHILDREN_LABELS: {label: 'label', energy:'energy'},
     localPlayerId: null,
     clientSetup: clientSetupPromise,
     serverSetup: serverSetupPromise,
@@ -49,12 +50,16 @@ window.gameData = {
           newLabel = newLabel.substr(0, 4) + '...';
         }
 
-        label = player.children.length && player.getChildAt(0);
+        label = player.children.length && _.find(player.children, function(child) {
+            //the label child does not have a key! that sucks!
+             return child.key ===  gameData.PLAYER_CHILDREN_LABELS.label
+        });
 
         if(label) {
             label.text = newLabel;
         } else if(!_.isUndefined(newLabel)) {
             var label = game.add.text(-21, 30, newLabel, { "font-size": '12px'});
+            label.key = gameData.PLAYER_CHILDREN_LABELS.label;
             player.addChild(label);
         }
     },
