@@ -35,8 +35,9 @@ $(function () {
     $('#config').submit(updateConfig);
 
     function updateConfig(e) {
-        gameData.localPlayer.data.name = $('#player-name').val();
-        settings.updateSetting('localPlayerName', gameData.localPlayer.data.name);
+        var rawName = $('#player-name').val();
+        gameData.localPlayer.data.name = rawName;
+        settings.updateSetting('localPlayerName', rawName);
 
         communication.localPlayerUpdated();
 
