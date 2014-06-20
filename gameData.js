@@ -95,6 +95,15 @@ window.gameData = {
         return _.filter(gameData.checkpointTiles, function(tile) {
             return _.contains(tile.playersTouched, player.data.id)
         });
+    },
+    playerLostEnergy: function(player){
+       //find the last child that is an energy and remove it.
+       var f = 0;
+       while(player.getChildAt(f).key === gameData.PLAYER_CHILDREN_LABELS.energy){
+            f++;
+       }
+       var energy = player.getChildAt(f - 1)
+       energy.destroy();
     }
 
 };

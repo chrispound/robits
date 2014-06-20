@@ -535,6 +535,7 @@ function goThroughPortal(sprite, tile) {
   */
 function fallInHole(sprite, tile) {
     sprite.damage(1);
+    gameData.playerLostEnergy(sprite);
     if(sprite.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
         console.log('the local player has died');
         communication.localPlayerDied();
