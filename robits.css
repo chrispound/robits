@@ -85,3 +85,12 @@ body {
 #toolbar {
     font-size: 30pt;
 }
+
+#toggle-settings,
+#toggle-help,
+#toggle-chat-panel,
+#toggle-scoreboard,
+#toggle-plan {
+    color:white;
+    opacity: 0.9;
+}

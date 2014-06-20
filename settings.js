@@ -4,7 +4,7 @@ _.mixin({ mapValues: function (obj, f_val) {
 
 window.settings = _.merge({
     soundEffectsOn: true,
-    musicOn: true,
+    musicOn: false,
     updateSetting: function(name, value) {
         settings[name] = value;
     },

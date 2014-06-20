@@ -3,14 +3,22 @@ window.hud = {};
 hud.defaultSettings = {
     hud: {
         panels: {
+            'plan': {
+                position: [190, 685]
+            },
             'chat-panel': {
-                position: [0, 0]
+                position: [930, 0]
             },
             'help': {
+                position: [500, 0],
                 visible: false
             },
             'settings': {
+              position: [0, 50],
                 visible: false
+            },
+            'scoreboard': {
+              position: [0,250]
             }
         }
 
