@@ -72,6 +72,7 @@ window.gameData = {
               clearSpriteMovement(player);
               resetToStart(player);
               player.revive(5);
+              gameData.updatePlayerHealth(player)
               player.data.movementQueue = [];
         });
         _.each(gameData.checkpointTiles, function(tile) {
@@ -103,6 +104,14 @@ window.gameData = {
        }
        var energy = player.getChildAt(f - 1)
        energy.destroy();
+    },
+
+    updatePlayerHealth: function (sprite){
+    for(var h = 0; h < sprite.health; h++){
+        var energy = this.game.add.sprite( (h * 15) + -40, -65, gameData.PLAYER_CHILDREN_LABELS.energy);
+        sprite.addChild(energy, energy.x, energy.y);
     }
+
+}
  };
 

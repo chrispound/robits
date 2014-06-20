@@ -202,7 +202,7 @@ function addPlayer(overwriteData) {
         movementQueue: [],
         id: Math.random(),
         isTeleporting: false,
-        checkpoints: [],
+        checkpoints: []
     }, overwriteData);
 
     player.data.startTile = chooseStartTile(player.data.id);
@@ -220,7 +220,7 @@ function addPlayer(overwriteData) {
     player.tint = parseInt(color.hex().replace("#", ""), 16);
 
     gameData.addPlayer(player);
-    updatePlayerHealth(player);
+    gameData.updatePlayerHealth(player);
     return player;
 }
 
@@ -452,12 +452,4 @@ function getTilesOfIndex(tileIndex) {
     return _.filter(_.flatten(layer.layer.data, true), function (tile) {
         return tile.index === tileIndex;
     });
-}
-
-function updatePlayerHealth(sprite){
-    for(var h = 0; h < sprite.health; h++){
-        var energy = this.game.add.sprite( (h * 15) + -40, -65, gameData.PLAYER_CHILDREN_LABELS.energy);
-        sprite.addChild(energy, energy.x, energy.y);
-    }
-
 }
