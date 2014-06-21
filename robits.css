@@ -31,7 +31,6 @@ body {
 #chosen-moves .amove {
     width: 24px;
     height: 24px;
-
 }
 
 #possible-moves {
@@ -74,7 +73,7 @@ body {
 
     /* Overwrite with... */
 
-    margin: 5px;
+    padding: 10px;
     background-color: rgba(245, 245, 245, .7);
 }
 
@@ -86,11 +85,39 @@ body {
     font-size: 30pt;
 }
 
-#toggle-settings,
-#toggle-help,
-#toggle-chat-panel,
-#toggle-scoreboard,
-#toggle-plan {
-    color:white;
+#toolbar > * {
+    color: white;
     opacity: 0.9;
+}
+
+#chat-log {
+    overflow-y: scroll;
+    height:350px;
+}
+
+
+
+/* Smartphones (portrait and landscape) ----------- */
+@media only screen
+and (max-width : 780px) {
+
+    #toolbar {
+        font-size: 20pt;
+    }
+
+    .amove {
+        margin: 0 1px 0 1px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .translucent-well * {
+        font-size: 10pt;
+    }
+
+    #chat-log {
+        max-width: 200px;
+        max-height: 200px;
+    }
+
 }

@@ -1,5 +1,7 @@
 window.hud = {};
 
+var MOVES_PER_TURN = 5;
+
 hud.defaultSettings = {
     hud: {
         panels: {

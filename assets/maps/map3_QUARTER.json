@@ -16,13 +16,13 @@
     {
 
     },
- "tileheight":128,
+ "tileheight":32,
  "tilesets":[
         {
          "firstgid":1,
-         "image":"..\/standard_tiles.png",
-         "imageheight":128,
-         "imagewidth":768,
+         "image":"..\/standard_tiles_QUARTER.png",
+         "imageheight":32,
+         "imagewidth":192,
          "margin":0,
          "name":"standard_tiles",
          "properties":
@@ -30,10 +30,10 @@
 
             },
          "spacing":0,
-         "tileheight":128,
-         "tilewidth":128
+         "tileheight":32,
+         "tilewidth":32
         }],
- "tilewidth":128,
+ "tilewidth":32,
  "version":1,
  "width":25
 }

@@ -9,20 +9,18 @@ var w = window,
 
 var container = $('#robits');
 
-// Use as much of the visible window as possible
-gameData.width = pageWidth - container.offset().left;
-gameData.height = pageHeight - container.offset().top;
+mapWidth = 1280;
+mapHeight = 1280;
 
-var game = new Phaser.Game(Math.min(gameData.width, 1280), Math.min(gameData.height, 1280), Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+gameData.width = Math.min(pageWidth - container.offset().left, mapWidth);
+gameData.height = Math.min(pageHeight - container.offset().top, mapHeight);
 
-var layer, map;
-var cursors;
-var widthInTiles, heightInTiles, tileWidth;
-var maxPlayers = 8;
+var game = new Phaser.Game(gameData.width, gameData.height, Phaser.AUTO, 'robits', { preload: preload, create: create, update: update, render: render });
+
+var layer, map, cursors, portalTiles, startTiles;
 
 var _players = [];
 var socket = io();
-var portalTiles, startTiles;
 var colorScale = chroma.scale('RdYlBu');
 
 window.communication.initializeSocket();
@@ -35,36 +33,42 @@ var sound = new Howl({
     volume: 0.5
 });
 
-var MOVES_PER_TURN = 5;
 var camera_position;
+var mapScale;
 
-function preload() {
-    game.load.tilemap('map', 'assets/maps/map1.json', null, Phaser.Tilemap.TILED_JSON);
-    game.load.image('standard_tiles', 'assets/standard_tiles.png');
-    game.load.image('robot', 'assets/robot.png');
-    game.load.image('energy', 'assets/ic_battery_mockup.png');
-}
+function chooseMapScale(mapWidthAtScale, mapHeightAtScale) {
+    var screenWidthsAcross = mapWidthAtScale / gameData.width;
+    var screenHeightsAcross = mapHeightAtScale / gameData.height;
+    var meanScreensAcross = (screenHeightsAcross + screenWidthsAcross) / 2;
 
-// Doesn't work completely right
-function resizeGame() {
-    var width = Math.min(map.widthInPixels, game.width);
-    var height = Math.min(map.heightInPixels, game.height);
-
-    game.width = width;
-    game.height = height;
-    game.stage.bounds.width = width;
-    game.stage.bounds.height = height;
-    game.camera.setSize(width, height);
-
-    if (game.renderType === Phaser.WEBGL) {
-        game.renderer.resize(width, height);
+    if(meanScreensAcross < 1.5) {
+        return 'FULL';
+    } else if(meanScreensAcross < 3) {
+        return 'HALF';
+    } else {
+        return 'QUARTER';
     }
 }
 
-function scaleGame(scale) {
-    gameData.game.world.scale.x = scale;
-    gameData.game.world.scale.y = scale;
+function getMapScaleAsNumber() {
+    switch(mapScale) {
+        case 'QUARTER': return 0.25;
+        case 'HALF': return 0.5;
+        default: return 1;
+    }
 }
+
+function preload() {
+    // For maps 1 and 2
+    //mapScale = chooseMapScale(1280, 1280);
+    // For Map 3
+    mapScale = chooseMapScale(3200, 3200);
+    game.load.tilemap('map', 'assets/maps/map3_'+mapScale+'.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.image('standard_tiles', 'assets/standard_tiles_'+mapScale+'.png');
+    game.load.image('robot', 'assets/robot_'+mapScale+'.png');
+    game.load.image('energy', 'assets/ic_battery_mockup.png');
+}
+
 
 function create() {
     gameData.game = game;
@@ -81,14 +85,9 @@ function create() {
     map.setTileIndexCallback(5, fallInHole, this);
 
     layer = map.createLayer('Tile Layer 1');
-
     layer.resizeWorld();
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
-
-    widthInTiles = 16;
-    heightInTiles = 12;
-    tileWidth = 128;
 
     startTiles = getTilesOfIndex(2);
     portalTiles = getTilesOfIndex(3);
@@ -219,7 +218,8 @@ function addPlayer(overwriteData) {
     game.physics.arcade.enable(player);
 
     player.body.collideWorldBounds = true;
-    player.body.setSize(128, 128);
+    var firstTile = map.getTile(0, 0);
+    player.body.setSize(firstTile.width, firstTile.height);
 
     player.anchor.setTo(0.5, 0.5);
 
@@ -270,7 +270,6 @@ function addRandomPath(player) {
 
 // These vars are temporary & just for debugging
 var firstTime = true;
-var timingOut = false;
 
 function clearTeleportFlags() {
   var BOUNDARY = 65;
@@ -284,20 +283,20 @@ function clearTeleportFlags() {
 }
 
 // Borrowed from http://www.html5gamedevs.com/topic/2410-drag-the-camera/?p=39215
-function moveCamera(o_pointer) {
-    if (!o_pointer.timeDown) { return; }
-    if (o_pointer.isDown && !o_pointer.targetObject) {
+function moveCamera(cursor) {
+    if (!cursor.timeDown) { return; }
+    if (cursor.isDown && !cursor.targetObject) {
         if(gameData.game.camera.target) {
             gameData.game.camera.unfollow();
         }
 
         if (camera_position) {
-            game.camera.x += camera_position.x - o_pointer.position.x;
-            game.camera.y += camera_position.y - o_pointer.position.y;
+            game.camera.x += camera_position.x - cursor.position.x;
+            game.camera.y += camera_position.y - cursor.position.y;
         }
-        camera_position = o_pointer.position.clone();
+        camera_position = cursor.position.clone();
     }
-    if (o_pointer.isUp) { camera_position = null; }
+    if (cursor.isUp) { camera_position = null; }
 }
 
 function tryRoundDone() {
@@ -358,8 +357,8 @@ function tryMovement(player) {
 function moveAtAngle(player, angle) {
     player.data.stepInProgress = true;
 
-    var distance = 128;
-    var speed = 350;
+    var distance = map.getTile(0, 0).width;
+    var speed = 350 * getMapScaleAsNumber();
     var time = distance / speed;
 
     this.target = [player.x + distance, player.y];
@@ -398,11 +397,10 @@ function goThroughPortal(sprite, tile) {
   if(!sprite.data.isTeleporting) {
 
     sprite.data.isTeleporting = true;
-    var nextPortal = portalTiles[(portalTiles.indexOf(tile) + 1) % portalTiles.length]
+    var nextPortal = portalTiles[(portalTiles.indexOf(tile) + 1) % portalTiles.length];
     var newPosition = getTileCenter(nextPortal);
-    sprite.body.x = newPosition.x - 64;
-    sprite.body.y = newPosition.y - 64;
-
+    sprite.body.x = newPosition.x - (nextPortal.width / 2);
+    sprite.body.y = newPosition.y - (nextPortal.height / 2);
   }
 
   return false;
