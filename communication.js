@@ -66,6 +66,10 @@ window.communication = (function(gameData) {
         socket.emit('player died', player.data.id);
     }
 
+    function playerWins(player) {
+        socket.emit('game over', "Game Over: " + (player.data.name || player.data.id) + " wins!");
+    }
+
     function playerDied(player) {
         if(typeof player === 'string') {
             player = gameData.getPlayer(player);
@@ -87,8 +91,8 @@ window.communication = (function(gameData) {
         }
     }
 
-    function playerWins(player) {
-        alert("Game Over: " + player.data.name || player.data.id + " wins!");
+    function gameOver(message) {
+        alert(message);
         gameData.restartGame(gameData.getPlayers());
     }
 
@@ -108,10 +112,7 @@ window.communication = (function(gameData) {
             });
         }
 
-        _.extend(clientPlayer.data, {
-            name: serverPlayerData.name
-            /* TODO add more as needed */
-        });
+        _.extend(clientPlayer.data, _.pick(serverPlayerData, 'name'));
 
         gameData.updatePlayerLabel(clientPlayer);
     }
@@ -189,7 +190,7 @@ window.communication = (function(gameData) {
     }
 
     function setUpSocketReceivers() {
-        socket.on('player won', playerWins);
+        socket.on('game over', gameOver);
 
         socket.on('players changed', syncPlayerList);
 

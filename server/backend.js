@@ -63,7 +63,7 @@ var roomPrototype = {
 
         log('Player ' + player.getName() + ' has disconnected from room ' + this.id + (message ? ' (reason: ' + message + ')' : ''), this.id);
         this.players.splice(playerIndex, 1);
-        emitGameChanged(socket); //todo emit to room?
+        emitGameChanged(socket);
     }
 };
 
@@ -76,7 +76,7 @@ var Player = function (socket) {
         id: id,
         socket: socket,
         getData: function() {
-            return _.pick(this, 'moves', 'alive', 'id');
+            return _.pick(this, 'moves', 'alive', 'id', 'name');
         },
         getName: function () {
             return this.name || this.id;
@@ -124,7 +124,7 @@ io.sockets.on('connection', function (socket) {
         'player moves ready': handlePlayerReady,
         'player died': killPlayer,
         'player checkpoint': shareCheckpointHit,
-        'player won': sharePlayerWon
+        'game over': shareGameOver
     };
 
     _.each(socketEvents, function(handler, event) {
@@ -189,8 +189,9 @@ io.sockets.on('connection', function (socket) {
         io.to(room.id).emit('player checkpoint', id)
     }
 
-    function sharePlayerWon(id) {
-        io.to(room.id).emit('player won', id);
+    function shareGameOver(message) {
+        log(message, room.id);
+        io.to(room.id).emit('game over', message);
     }
 });
 
@@ -203,6 +204,7 @@ var addPlayer = function (socket) {
 
     return player;
 };
+
 function emitGameChanged(socket) {
     var room = rooms[socket.room];
     io.to(socket.room).emit('game info', room.getGameData());
