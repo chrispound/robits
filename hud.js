@@ -1,6 +1,52 @@
 window.hud = {};
 
+var MOVES_PER_TURN = 5;
+
+hud.defaultSettings = {
+    hud: {
+        panels: {
+            'plan': {
+                position: [190, 685]
+            },
+            'chat-panel': {
+                position: [930, 0]
+            },
+            'help': {
+                position: [500, 0],
+                visible: false
+            },
+            'settings': {
+              position: [0, 50],
+                visible: false
+            },
+            'scoreboard': {
+              position: [0,250]
+            }
+        }
+
+    }
+};
+
+var panels = ['plan', 'settings', 'help', 'chat-panel', 'scoreboard'];
+
 $(function () {
+    /* The hud container (#robits) should stretch to the full size of the
+     * visible window to maximize the use of space */
+    $('#robits').width($('body').width()).height(gameData.height);
+
+    $( ".draggable").draggable({
+        stop: function() {
+            var name = $(this).attr('id');
+
+            var panelOverwrite = {};
+            panelOverwrite[name] = {
+                position: [$(this).css('left'), $(this).css('top')]
+            };
+
+            _.merge(settings.hud.panels, panelOverwrite);
+            settings.save();
+        }
+    });
 
     $('#chat').submit(function (e) {
         var $chat = $('#chat');
@@ -9,9 +55,37 @@ $(function () {
         e.preventDefault();
     });
 
-    if (DEBUG_MODE) {
-        $('#possible-moves').hide();
-    }
+    // Apply panel settings and behavior
+    _.each(panels, function(name) {
+        var $panel = $('#'+name);
+        $('#toggle-'+name).click(function() {
+
+            $panel.fadeToggle(400, function() {
+                var panelOverwrite = {};
+                panelOverwrite[name] = {
+                    visible: !($panel.css('display') === 'none')
+                };
+
+                _.merge(settings.hud.panels, panelOverwrite);
+                settings.save();
+            });
+        });
+
+        var panelSettings = settings.hud.panels[name];
+
+        if(panelSettings && panelSettings.position) {
+            $panel.css('left', panelSettings.position[0])
+                    .css('top', panelSettings.position[1]);
+        }
+
+        if(panelSettings && !_.isUndefined(panelSettings.visible)) {
+            $panel.css('display', panelSettings.visible ? 'inherit' : 'none');
+        }
+    });
+
+    $('#toggle-plan-contents').click(function() {
+       $(this).toggleClass('glyphicon-chevron-down').toggleClass('glyphicon-chevron-right');
+    });
 
     $('#submit-moves').click(function (e) {
 
@@ -31,17 +105,19 @@ $(function () {
         e.preventDefault();
     });
 
-    $('#player-name').blur(updateConfig);
-    $('#config').submit(updateConfig);
+    $('#player-name').blur(updateSettings);
+    $('#config').submit(updateSettings);
 
-    function updateConfig(e) {
+    function updateSettings(e) {
         var rawName = $('#player-name').val();
         gameData.localPlayer.data.name = rawName;
         settings.updateSetting('localPlayerName', rawName);
 
         communication.localPlayerUpdated();
 
-        e.preventDefault();
+        if(e) {
+            e.preventDefault();
+        }
     }
 
     $('#audio')
@@ -50,13 +126,14 @@ $(function () {
             if ($(this).is(':checked')) {
                 sound.play();
                 sound.fade(0, 0.5, 1000);
-                settings.updateSetting('musicOn', true);
+                settings.musicOn = true;
             } else {
                 sound.fade(0.5, 0, 1000, function () {
                     sound.pause();
                 });
-                settings.updateSetting('musicOn', false);
+                settings.musicOn = false;
             }
+            settings.save();
         });
 
     hud.displayPossibleMoves = function () {
@@ -68,7 +145,7 @@ $(function () {
         var imgId = 0;
 
         function getMoveImage(id, direction) {
-            return $("<img id='"+ id +"' data-move='" + direction + "' data-src='assets/arrow-" + direction + ".png' src='assets/arrow-" + direction + ".png' class='img-rounded amove' alt='" + direction + "'>");
+            return $("<img id='"+ id +"' data-do-not-drag='true' data-move='" + direction + "' data-src='assets/arrow-" + direction + ".png' src='assets/arrow-" + direction + ".png' class='img-rounded amove' alt='" + direction + "'>");
         }
 
         _.each(generateNewMoves(), function (move) {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="25" height="25" tilewidth="128" tileheight="128">
+ <tileset firstgid="1" name="standard_tiles" tilewidth="128" tileheight="128">
+  <image source="../assets/standard_tiles.png" width="768" height="128"/>
+ </tileset>
+ <tileset firstgid="7" name="alternate_tiles" tilewidth="128" tileheight="128">
+  <image source="../assets/alternate_tiles.png" width="768" height="896"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="25" height="25">
+  <data encoding="base64" compression="zlib">
+   eJzllUsKACAIRO17/yNHi0AiqDEUssVAixlemWggogCogn6JXmDUSStPusgOX2FC3sFzJ4wsrFUGGP0cQcbw7xhe+kqLUQBxBpJDGZK7/cqQ/IeX3rVmWMwry7mrvT+096CXvtJiNOKeBX4=
+  </data>
+ </layer>
+</map>
