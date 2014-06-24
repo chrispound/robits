@@ -1,4 +1,4 @@
-var DEBUG_MODE = false;
+var DEBUG_MODE = true;
 
 var w = window,
     d = document,
@@ -60,10 +60,10 @@ function getMapScaleAsNumber() {
 
 function preload() {
     // For maps 1 and 2
-    //mapScale = chooseMapScale(1280, 1280);
+    mapScale = chooseMapScale(1280, 1280);
     // For Map 3
-    mapScale = chooseMapScale(3200, 3200);
-    game.load.tilemap('map', 'assets/maps/map3_'+mapScale+'.json', null, Phaser.Tilemap.TILED_JSON);
+//    mapScale = chooseMapScale(3200, 3200);
+    game.load.tilemap('map', 'assets/maps/map1_'+mapScale+'.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('standard_tiles', 'assets/standard_tiles_'+mapScale+'.png');
     game.load.image('robot', 'assets/robot_'+mapScale+'.png');
     game.load.image('energy', 'assets/ic_battery_mockup.png');
@@ -83,10 +83,12 @@ function create() {
     map.setTileIndexCallback(3, goThroughPortal, this);
     map.setTileIndexCallback(4, hitCheckpoint, this);
     map.setTileIndexCallback(5, fallInHole, this);
+    map.setTileIndexCallback(7, hitCheckpoint,this);
 
     layer = map.createLayer('Tile Layer 1');
     layer.resizeWorld();
 
+    
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     startTiles = getTilesOfIndex(2);
@@ -370,7 +372,9 @@ function moveAtAngle(player, angle) {
 
 function hitCheckpoint(sprite, tile) {
     if(!_.contains(tile.playersTouched, sprite.data.id)) {
-
+//        map.replace(tile.index, 1, 0, 0,10,10);
+        map.putTile(7, tile.x, tile.y);
+        console.log('replaced tile');
         console.log("Player " + sprite.data.id + " scored a checkpoint");
         tile.playersTouched.push(sprite.data.id);
 
@@ -447,6 +451,10 @@ function centerOnTile(sprite, tile) {
 
     sprite.x = tileCenter.x;
     sprite.y = tileCenter.y;
+}
+
+function hitHitCheckpoint(sprite, tile){
+    
 }
 
 function getTileCenter(tile) {
