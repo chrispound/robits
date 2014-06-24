@@ -1,4 +1,4 @@
-var DEBUG_MODE = true;
+var DEBUG_MODE = false;
 
 var w = window,
     d = document,
@@ -373,7 +373,9 @@ function moveAtAngle(player, angle) {
 function hitCheckpoint(sprite, tile) {
     if(!_.contains(tile.playersTouched, sprite.data.id)) {
 //        map.replace(tile.index, 1, 0, 0,10,10);
-        map.putTile(7, tile.x, tile.y);
+        if(gameData.isLocalPlayer(sprite)){
+            map.putTile(7, tile.x, tile.y);
+        }
         console.log('replaced tile');
         console.log("Player " + sprite.data.id + " scored a checkpoint");
         tile.playersTouched.push(sprite.data.id);
@@ -381,7 +383,7 @@ function hitCheckpoint(sprite, tile) {
         var allCheckpointsHit = gameData.getCheckpointsTouched(sprite).length === gameData.checkpointTiles.length;
 
         if(allCheckpointsHit) {
-            if(sprite.data.id === gameData.localPlayer.data.id) {
+            if(gameData.isLocalPlayer(sprite)) {
                 communication.localPlayerWins();
                 console.log("Player touched last checkpoint, send win event!");
             }
@@ -418,7 +420,7 @@ function goThroughPortal(sprite, tile) {
 function fallInHole(sprite, tile) {
     sprite.damage(1);
     gameData.playerLostEnergy(sprite);
-    if(sprite.health <= 0 && sprite.data.id === gameData.localPlayer.data.id){
+    if(sprite.health <= 0 && gameData.isLocalPlayer(sprite)){
         console.log('the local player has died');
         communication.localPlayerDied();
     }
@@ -451,10 +453,6 @@ function centerOnTile(sprite, tile) {
 
     sprite.x = tileCenter.x;
     sprite.y = tileCenter.y;
-}
-
-function hitHitCheckpoint(sprite, tile){
-    
 }
 
 function getTileCenter(tile) {

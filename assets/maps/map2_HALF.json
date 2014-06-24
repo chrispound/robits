@@ -22,7 +22,7 @@
          "firstgid":1,
          "image":"..\/standard_tiles_HALF.png",
          "imageheight":64,
-         "imagewidth":384,
+         "imagewidth":448,
          "margin":0,
          "name":"standard_tiles",
          "properties":

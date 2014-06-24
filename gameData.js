@@ -62,6 +62,11 @@ window.gameData = {
             player.addChild(label);
         }
     },
+
+    isLocalPlayer: function (sprite){
+        return sprite.data.id === gameData.localPlayer.data.id;
+    },
+
     addInstruction: function (player, instruction) {
         var moveFunction = _.partial(moveAtAngle, player, directionToAngle(instruction));
         moveFunction.instruction = instruction;
