@@ -75,7 +75,7 @@ window.gameData = {
               gameData.updatePlayerHealth(player);
               player.data.movementQueue = [];
         });
-        _.each(gameData.checkpointTiles, function(tile) {
+        _.each(map.checkpointTiles, function(tile) {
             tile.playersTouched = [];
         });
     },
@@ -85,15 +85,10 @@ window.gameData = {
       _.each(gameData.getPlayers(), function(player) {
             var playerInfo = $('<li/>');
 
-            var checkpointsHit = gameData.getCheckpointsTouched(player);
+            var checkpointsHit = map.getCheckpointsTouched(player);
 
-            playerInfo.html(escapeHtml(player.data.name || player.data.id) + ': ' + (((checkpointsHit && checkpointsHit.length) || '0') + '/' + gameData.checkpointTiles.length));
+            playerInfo.html(escapeHtml(player.data.name || player.data.id) + ': ' + (((checkpointsHit && checkpointsHit.length) || '0') + '/' + map.checkpointTiles.length));
             $('#player-info').append(playerInfo);
-        });
-    },
-    getCheckpointsTouched: function(player) {
-        return _.filter(gameData.checkpointTiles, function(tile) {
-            return _.contains(tile.playersTouched, player.data.id)
         });
     },
     playerLostEnergy: function(player){
