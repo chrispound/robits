@@ -116,7 +116,7 @@ io.sockets.on('connection', function (socket) {
         'chat': function(commandOrMessage) {
             chat.runCommandOrShareMessage(room, socket, commandOrMessage);
         },
-        'requestUpdate': sendUpdate,
+        'request update': sendUpdate,
         'player updated': sharePlayerUpdated,
         'disconnect': function(message) {
             room.dropPlayer(socket, message);
@@ -206,6 +206,7 @@ var addPlayer = function (socket) {
 };
 
 function emitGameChanged(socket) {
+    log("game updated", socket.room, socket);
     var room = rooms[socket.room];
     io.to(socket.room).emit('game info', room.getGameData());
     io.to(socket.room).emit('players changed', room.getPlayerData());
