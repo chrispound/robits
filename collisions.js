@@ -10,6 +10,7 @@ window.collisions = {
       var allCheckpointsHit = map.getCheckpointsTouched(sprite).length === map.checkpointTiles.length;
 
       if(allCheckpointsHit) {
+          clearSpriteMovement(sprite);
         if(sprite.data.id === gameData.localPlayer.data.id) {
           communication.localPlayerWins();
           console.log("Player touched last checkpoint, send win event!");
@@ -30,7 +31,7 @@ window.collisions = {
     if(!sprite.data.isTeleporting) {
 
       sprite.data.isTeleporting = true;
-      var nextPortal = portalTiles[(portalTiles.indexOf(tile) + 1) % portalTiles.length];
+      var nextPortal = map.portalTiles[(map.portalTiles.indexOf(tile) + 1) % map.portalTiles.length];
       var newPosition = getTileCenter(nextPortal);
       sprite.body.x = newPosition.x - (nextPortal.width / 2);
       sprite.body.y = newPosition.y - (nextPortal.height / 2);
